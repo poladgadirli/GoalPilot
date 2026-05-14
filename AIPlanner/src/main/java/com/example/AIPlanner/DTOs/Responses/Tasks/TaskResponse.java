@@ -29,7 +29,8 @@ public class TaskResponse
             LocalDateTime dueDate,
             TaskPriority priority,
             TaskStatus status,
-            Integer estimatedMinutes
+            Integer estimatedMinutes,
+            CategorySummaryResponse category
     ) {
         this.id = id;
         this.title = title;
@@ -40,6 +41,7 @@ public class TaskResponse
         this.priority = priority;
         this.status = status;
         this.estimatedMinutes = estimatedMinutes;
+        this.category = category;
     }
 
     public Long getId() {
