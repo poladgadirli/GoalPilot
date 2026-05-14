@@ -5,6 +5,8 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Entities.Task;
+import com.example.AIPlanner.Enums.TaskPriority;
+import com.example.AIPlanner.Enums.TaskStatus;
 import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
 import com.example.AIPlanner.Repositories.TaskRepository;
@@ -27,6 +29,19 @@ public class TaskServiceImpl implements TaskService {
     public Page<TaskResponse> getAll(Pageable pageable) {
         return taskRepository.findAll(pageable)
                 .map(taskMapper::toResponse);
+    }
+
+    @Override
+    public Page<TaskResponse> getFilteredTasks(
+            TaskStatus status,
+            TaskPriority priority,
+            Boolean completed,
+            Pageable pageable
+    )
+    {
+        Page<Task> tasks = taskRepository.findFilteredTasks(status, priority, completed, pageable);
+
+        return tasks.map(taskMapper::toResponse);
     }
 
     @Override
