@@ -9,6 +9,7 @@ import com.example.AIPlanner.Enums.TaskPriority;
 import com.example.AIPlanner.Enums.TaskStatus;
 import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
+import com.example.AIPlanner.Repositories.CategoryRepository;
 import com.example.AIPlanner.Repositories.TaskRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +20,12 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
+    private final CategoryRepository categoryRepository;
 
-    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper) {
+    public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, CategoryRepository categoryRepository) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
