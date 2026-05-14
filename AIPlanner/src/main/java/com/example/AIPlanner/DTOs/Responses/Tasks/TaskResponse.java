@@ -77,4 +77,14 @@ public class TaskResponse
     public Integer getEstimatedMinutes() {
         return estimatedMinutes;
     }
+
+    public CategorySummaryResponse getCategory()
+    {
+        return category;
+    }
+
+    public void setCategory(CategorySummaryResponse category)
+    {
+        this.category = category;
+    }
 }
