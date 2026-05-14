@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 
 public class CreateTaskRequest {
 
-    @NotBlank(message = "Title boş ola bilməz")
-    @Size(max = 150, message = "Title maksimum 150 simvol ola bilər")
+    @NotBlank(message = "Title must not be blank")
+    @Size(max = 150, message = "Title must be at most 150 characters")
     private String title;
 
-    @Size(max = 1000, message = "Description maksimum 1000 simvol ola bilər")
+    @Size(max = 1000, message = "Description must be at most 1000 characters")
     private String description;
 
     private LocalDateTime dueDate;
