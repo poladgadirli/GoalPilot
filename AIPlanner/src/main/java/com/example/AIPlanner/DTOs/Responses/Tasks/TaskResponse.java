@@ -11,6 +11,7 @@ public class TaskResponse
     private Long id;
     private String title;
     private String description;
+    private boolean completed;
     private LocalDateTime createdAt;
     private LocalDateTime dueDate;
     private TaskPriority priority;
@@ -31,6 +32,7 @@ public class TaskResponse
         this.id = id;
         this.title = title;
         this.description = description;
+        this.completed = completed;
         this.createdAt = createdAt;
         this.dueDate = dueDate;
         this.priority = priority;
@@ -50,6 +52,9 @@ public class TaskResponse
         return description;
     }
 
+    public boolean isCompleted() {
+        return completed;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
