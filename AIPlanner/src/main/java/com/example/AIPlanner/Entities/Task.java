@@ -1,5 +1,7 @@
 package com.example.AIPlanner.Entities;
 
+import com.example.AIPlanner.Enums.TaskPriority;
+import com.example.AIPlanner.Enums.TaskStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -55,4 +57,14 @@ public class Task {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority = TaskPriority.MEDIUM;
+
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status = TaskStatus.TODO;
+
+    private LocalDateTime dueDate;
+
+    private Integer estimatedMinutes;
 }
