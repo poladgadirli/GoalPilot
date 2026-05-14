@@ -36,10 +36,20 @@ public class TaskServiceImpl implements TaskService {
             TaskStatus status,
             TaskPriority priority,
             Boolean completed,
+            String keyword,
             Pageable pageable
-    )
-    {
-        Page<Task> tasks = taskRepository.findFilteredTasks(status, priority, completed, pageable);
+    ) {
+        String searchKeyword = (keyword == null || keyword.trim().isEmpty())
+                ? null
+                : keyword.trim();
+
+        Page<Task> tasks = taskRepository.findFilteredTasks(
+                status,
+                priority,
+                completed,
+                searchKeyword,
+                pageable
+        );
 
         return tasks.map(taskMapper::toResponse);
     }
