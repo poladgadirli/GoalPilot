@@ -1,5 +1,8 @@
 package com.example.AIPlanner.DTOs.Responses.Tasks;
 
+import com.example.AIPlanner.Enums.TaskPriority;
+import com.example.AIPlanner.Enums.TaskStatus;
+
 import java.time.LocalDateTime;
 
 public class TaskResponse
@@ -10,13 +13,31 @@ public class TaskResponse
     private String description;
     private boolean completed;
     private LocalDateTime createdAt;
+    private LocalDateTime dueDate;
+    private TaskPriority priority;
+    private TaskStatus status;
+    private Integer estimatedMinutes;
 
-    public TaskResponse(Long id, String title, String description, boolean completed, LocalDateTime createdAt) {
+    public TaskResponse(
+            Long id,
+            String title,
+            String description,
+            boolean completed,
+            LocalDateTime createdAt,
+            LocalDateTime dueDate,
+            TaskPriority priority,
+            TaskStatus status,
+            Integer estimatedMinutes
+    ) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.completed = completed;
         this.createdAt = createdAt;
+        this.dueDate = dueDate;
+        this.priority = priority;
+        this.status = status;
+        this.estimatedMinutes = estimatedMinutes;
     }
 
     public Long getId() {
@@ -37,5 +58,21 @@ public class TaskResponse
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public TaskPriority getPriority() {
+        return priority;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public Integer getEstimatedMinutes() {
+        return estimatedMinutes;
     }
 }
