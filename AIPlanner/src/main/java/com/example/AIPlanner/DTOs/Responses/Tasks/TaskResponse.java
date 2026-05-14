@@ -1,5 +1,6 @@
 package com.example.AIPlanner.DTOs.Responses.Tasks;
 
+import com.example.AIPlanner.DTOs.Responses.Categories.CategorySummaryResponse;
 import com.example.AIPlanner.Enums.TaskPriority;
 import com.example.AIPlanner.Enums.TaskStatus;
 
@@ -17,6 +18,7 @@ public class TaskResponse
     private TaskPriority priority;
     private TaskStatus status;
     private Integer estimatedMinutes;
+    private CategorySummaryResponse category;
 
     public TaskResponse(
             Long id,
