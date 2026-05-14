@@ -2,6 +2,7 @@ package com.example.AIPlanner.Controller;
 
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
+import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Services.TaskService;
 import jakarta.validation.Valid;
@@ -20,30 +21,40 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<TaskResponse> getAll() {
-        return taskService.getAll();
+    public ApiResponse<List<TaskResponse>> getAll() {
+        List<TaskResponse> tasks = taskService.getAll();
+
+        return ApiResponse.success("Tasks fetched successfully", tasks);
     }
 
     @GetMapping("/{id}")
-    public TaskResponse getById(@PathVariable Long id) {
-        return taskService.getById(id);
+    public ApiResponse<TaskResponse> getById(@PathVariable Long id) {
+        TaskResponse task = taskService.getById(id);
+
+        return ApiResponse.success("Task fetched successfully", task);
     }
 
     @PostMapping
-    public TaskResponse create(@Valid @RequestBody CreateTaskRequest request) {
-        return taskService.create(request);
+    public ApiResponse<TaskResponse> create(@Valid @RequestBody CreateTaskRequest request) {
+        TaskResponse task = taskService.create(request);
+
+        return ApiResponse.success("Task created successfully", task);
     }
 
     @PutMapping("/{id}")
-    public TaskResponse update(
+    public ApiResponse<TaskResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTaskRequest request
     ) {
-        return taskService.update(id, request);
+        TaskResponse task = taskService.update(id, request);
+
+        return ApiResponse.success("Task updated successfully", task);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ApiResponse<String> delete(@PathVariable Long id) {
         taskService.delete(id);
+
+        return ApiResponse.success("Task deleted successfully", null);
     }
 }
