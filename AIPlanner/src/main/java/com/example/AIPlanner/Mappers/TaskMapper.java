@@ -2,7 +2,9 @@ package com.example.AIPlanner.Mappers;
 
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
+import com.example.AIPlanner.DTOs.Responses.Categories.CategorySummaryResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
+import com.example.AIPlanner.Entities.Category;
 import com.example.AIPlanner.Entities.Task;
 import com.example.AIPlanner.Enums.TaskStatus;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,17 @@ public class TaskMapper {
                 task.getPriority(),
                 task.getStatus(),
                 task.getEstimatedMinutes()
+        );
+    }
+    private CategorySummaryResponse toCategorySummary(Category category) {
+        if (category == null) {
+            return null;
+        }
+
+        return new CategorySummaryResponse(
+                category.getId(),
+                category.getName(),
+                category.getColor()
         );
     }
 }
