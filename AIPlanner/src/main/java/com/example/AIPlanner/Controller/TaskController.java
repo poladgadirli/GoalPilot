@@ -6,6 +6,10 @@ import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Services.TaskServiceImpl;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +25,11 @@ public class TaskController {
     }
 
     @GetMapping
-    public ApiResponse<List<TaskResponse>> getAll() {
-        List<TaskResponse> tasks = taskService.getAll();
+    public ApiResponse<Page<TaskResponse>> getAll(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Page<TaskResponse> tasks = taskService.getAll(pageable);
 
         return ApiResponse.success("Tasks fetched successfully", tasks);
     }
