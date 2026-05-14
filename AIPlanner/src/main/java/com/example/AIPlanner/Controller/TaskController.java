@@ -4,6 +4,8 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
+import com.example.AIPlanner.Enums.TaskPriority;
+import com.example.AIPlanner.Enums.TaskStatus;
 import com.example.AIPlanner.Services.TaskServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -28,10 +30,25 @@ public class TaskController {
     @GetMapping
     public ApiResponse<Page<TaskResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) TaskPriority priority,
+            @RequestParam(required = false) Boolean completed
     ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<TaskResponse> tasks = taskService.getAll(pageable);
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<TaskResponse> tasks = taskService.getFilteredTasks(
+                status,
+                priority,
+                completed,
+                pageable
+        );
 
         return ApiResponse.success("Tasks fetched successfully", tasks);
     }
