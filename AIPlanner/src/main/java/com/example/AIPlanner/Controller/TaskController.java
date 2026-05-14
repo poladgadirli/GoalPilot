@@ -35,7 +35,8 @@ public class TaskController {
             @RequestParam(defaultValue = "desc") String direction,
             @RequestParam(required = false) TaskStatus status,
             @RequestParam(required = false) TaskPriority priority,
-            @RequestParam(required = false) Boolean completed
+            @RequestParam(required = false) Boolean completed,
+            @RequestParam(required = false) String keyword
     ) {
         Sort sort = direction.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -47,6 +48,7 @@ public class TaskController {
                 status,
                 priority,
                 completed,
+                keyword,
                 pageable
         );
 
