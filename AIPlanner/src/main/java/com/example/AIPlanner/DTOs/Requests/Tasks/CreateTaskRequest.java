@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
-public class CreateTaskRequest {
+    public class CreateTaskRequest {
 
     @NotBlank(message = "Title must not be blank")
     @Size(max = 150, message = "Title must be at most 150 characters")
@@ -14,6 +14,8 @@ public class CreateTaskRequest {
 
     @Size(max = 1000, message = "Description must be at most 1000 characters")
     private String description;
+
+    private Long categoryId;
 
     private LocalDateTime dueDate;
 
@@ -33,5 +35,15 @@ public class CreateTaskRequest {
 
     public TaskPriority getPriority() {
         return priority;
+    }
+
+    public Long getCategoryId()
+    {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId)
+    {
+        this.categoryId = categoryId;
     }
 }
