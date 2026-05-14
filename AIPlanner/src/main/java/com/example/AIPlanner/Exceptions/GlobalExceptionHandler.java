@@ -1,5 +1,6 @@
 package com.example.AIPlanner.Exceptions;
 
+import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ErrorResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ValidationErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -41,5 +42,12 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(ex.getMessage()));
     }
 }
