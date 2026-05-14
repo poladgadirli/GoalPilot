@@ -16,6 +16,8 @@ public class UpdateTaskRequest {
     @Size(max = 1000, message = "Description must be at most 1000 characters")
     private String description;
 
+    private Long categoryId;
+
     private LocalDateTime dueDate;
 
     private TaskPriority priority;
@@ -40,5 +42,15 @@ public class UpdateTaskRequest {
 
     public TaskStatus getStatus() {
         return status;
+    }
+
+    public Long getCategoryId()
+    {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId)
+    {
+        this.categoryId = categoryId;
     }
 }
