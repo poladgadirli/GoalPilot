@@ -32,10 +32,8 @@ public class TaskMapper {
         if (request.getPriority() != null) {
             task.setPriority(request.getPriority());
         }
-
         if (request.getStatus() != null) {
             task.setStatus(request.getStatus());
-            task.setCompleted(request.getStatus() == TaskStatus.DONE);
         }
     }
 
@@ -44,7 +42,7 @@ public class TaskMapper {
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),
-                task.isCompleted(),
+                task.getStatus() == TaskStatus.DONE,
                 task.getCreatedAt(),
                 task.getDueDate(),
                 task.getPriority(),
