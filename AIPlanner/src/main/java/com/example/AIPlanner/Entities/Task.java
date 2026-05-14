@@ -19,6 +19,10 @@ public class Task {
     @Column(length = 1000)
     private String description;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Task() {
@@ -46,6 +50,16 @@ public class Task {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Category getCategory()
+    {
+        return category;
+    }
+
+    public void setCategory(Category category)
+    {
+        this.category = category;
     }
 
     @Enumerated(EnumType.STRING)

@@ -1,13 +1,12 @@
 package com.example.AIPlanner.Entities;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "categories" )
-public class Category
-{
+@Table(name = "categories")
+public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,23 +17,18 @@ public class Category
     @Column(length = 20)
     private String color;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Category()
-    {
-
+    public Category() {
     }
 
-    public Category(Long id, String name, String color, LocalDateTime createdAt, LocalDateTime updatedAt)
-    {
-        this.id = id;
-        this.name = name;
-        this.color = color;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
     @PreUpdate
