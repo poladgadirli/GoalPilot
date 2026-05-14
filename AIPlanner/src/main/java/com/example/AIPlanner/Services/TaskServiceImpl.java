@@ -4,9 +4,11 @@ import com.example.AIPlanner.Abstracts.Services.TaskService;
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
+import com.example.AIPlanner.Entities.Category;
 import com.example.AIPlanner.Entities.Task;
 import com.example.AIPlanner.Enums.TaskPriority;
 import com.example.AIPlanner.Enums.TaskStatus;
+import com.example.AIPlanner.Exceptions.CategoryNotFoundException;
 import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
 import com.example.AIPlanner.Repositories.CategoryRepository;
@@ -68,6 +70,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse create(CreateTaskRequest request) {
         Task task = taskMapper.toEntity(request);
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(request.getCategoryId()));
+
+            task.setCategory(category);
+        }
 
         Task savedTask = taskRepository.save(task);
 
