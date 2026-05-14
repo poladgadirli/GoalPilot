@@ -90,6 +90,13 @@ public class TaskServiceImpl implements TaskService {
 
         taskMapper.updateEntity(task, request);
 
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(request.getCategoryId()));
+
+            task.setCategory(category);
+        }
+
         Task updatedTask = taskRepository.save(task);
 
         return taskMapper.toResponse(updatedTask);
