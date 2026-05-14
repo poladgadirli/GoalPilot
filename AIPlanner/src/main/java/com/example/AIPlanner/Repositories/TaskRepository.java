@@ -12,19 +12,25 @@ import org.springframework.data.repository.query.Param;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("""
-        SELECT t FROM Task t
-        WHERE (:status IS NULL OR t.status = :status)
-          AND (:priority IS NULL OR t.priority = :priority)
-          AND (
-              :completed IS NULL
-              OR (:completed = true AND t.status = com.example.AIPlanner.Enums.TaskStatus.DONE)
-              OR (:completed = false AND t.status <> com.example.AIPlanner.Enums.TaskStatus.DONE)
-          )
-        """)
+    SELECT t FROM Task t
+    WHERE (:status IS NULL OR t.status = :status)
+      AND (:priority IS NULL OR t.priority = :priority)
+      AND (
+          :completed IS NULL
+          OR (:completed = true AND t.status = com.example.AIPlanner.Enums.TaskStatus.DONE)
+          OR (:completed = false AND t.status <> com.example.AIPlanner.Enums.TaskStatus.DONE)
+      )
+      AND (
+          :keyword IS NULL
+          OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          OR LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+      )
+    """)
     Page<Task> findFilteredTasks(
             @Param("status") TaskStatus status,
             @Param("priority") TaskPriority priority,
             @Param("completed") Boolean completed,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
 }
