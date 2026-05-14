@@ -6,17 +6,15 @@ import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 public interface TaskService {
 
-    Page<TaskResponse> getAllTasks(Pageable pageable);
+    Page<TaskResponse> getAll(Pageable pageable);
 
-    TaskResponse getTaskById(Long id);
+    TaskResponse getById(Long id);
 
-    TaskResponse createTask(CreateTaskRequest request);
+    TaskResponse create(CreateTaskRequest request);
 
-    TaskResponse updateTask(Long id, UpdateTaskRequest request);
+    TaskResponse update(Long id, UpdateTaskRequest request);
 
-    void deleteTask(Long id);
+    void delete(Long id);
 }
