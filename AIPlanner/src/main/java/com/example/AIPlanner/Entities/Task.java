@@ -19,8 +19,6 @@ public class Task {
     @Column(length = 1000)
     private String description;
 
-    private boolean completed = false;
-
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Task() {
@@ -44,14 +42,6 @@ public class Task {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
     }
 
     public LocalDateTime getCreatedAt() {
