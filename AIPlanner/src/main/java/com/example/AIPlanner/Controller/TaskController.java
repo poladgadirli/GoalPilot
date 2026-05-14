@@ -4,7 +4,7 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
-import com.example.AIPlanner.Services.TaskService;
+import com.example.AIPlanner.Services.TaskServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +14,9 @@ import java.util.List;
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    private final TaskService taskService;
+    private final TaskServiceImpl taskService;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskServiceImpl taskService) {
         this.taskService = taskService;
     }
 
