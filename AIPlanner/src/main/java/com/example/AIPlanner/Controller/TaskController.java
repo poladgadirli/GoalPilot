@@ -7,6 +7,7 @@ import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Services.TaskServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -26,9 +27,10 @@ public class TaskController {
 
     @GetMapping
     public ApiResponse<Page<TaskResponse>> getAll(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
+        Pageable pageable = PageRequest.of(page, size);
         Page<TaskResponse> tasks = taskService.getAll(pageable);
 
         return ApiResponse.success("Tasks fetched successfully", tasks);
