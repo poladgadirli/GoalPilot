@@ -16,6 +16,7 @@ public interface TaskService {
             TaskStatus status,
             TaskPriority priority,
             Boolean completed,
+            String keyword,
             Pageable pageable
     );
 
