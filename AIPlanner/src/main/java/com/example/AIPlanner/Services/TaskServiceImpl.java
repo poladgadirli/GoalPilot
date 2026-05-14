@@ -1,5 +1,6 @@
 package com.example.AIPlanner.Services;
 
+import com.example.AIPlanner.Abstracts.Services.TaskService;
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
@@ -7,12 +8,12 @@ import com.example.AIPlanner.Entities.Task;
 import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
 import com.example.AIPlanner.Repositories.TaskRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class TaskServiceImpl {
+public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
@@ -22,13 +23,13 @@ public class TaskServiceImpl {
         this.taskMapper = taskMapper;
     }
 
-    public List<TaskResponse> getAll() {
-        return taskRepository.findAll()
-                .stream()
-                .map(taskMapper::toResponse)
-                .toList();
+    @Override
+    public Page<TaskResponse> getAll(Pageable pageable) {
+        return taskRepository.findAll(pageable)
+                .map(taskMapper::toResponse);
     }
 
+    @Override
     public TaskResponse getById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -36,6 +37,7 @@ public class TaskServiceImpl {
         return taskMapper.toResponse(task);
     }
 
+    @Override
     public TaskResponse create(CreateTaskRequest request) {
         Task task = taskMapper.toEntity(request);
 
@@ -44,6 +46,7 @@ public class TaskServiceImpl {
         return taskMapper.toResponse(savedTask);
     }
 
+    @Override
     public TaskResponse update(Long id, UpdateTaskRequest request) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
@@ -55,6 +58,7 @@ public class TaskServiceImpl {
         return taskMapper.toResponse(updatedTask);
     }
 
+    @Override
     public void delete(Long id) {
         if (!taskRepository.existsById(id)) {
             throw new TaskNotFoundException(id);
