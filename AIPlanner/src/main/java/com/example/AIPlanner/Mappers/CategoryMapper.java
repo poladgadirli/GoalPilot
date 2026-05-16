@@ -29,7 +29,12 @@ public class CategoryMapper {
     }
 
     public void updateEntity(Category category, UpdateCategoryRequest request) {
-        category.setName(request.getName());
-        category.setColor(request.getColor());
+        if (request.getName() != null) {
+            category.setName(request.getName());
+        }
+
+        if (request.getColor() != null) {
+            category.setColor(request.getColor());
+        }
     }
 }

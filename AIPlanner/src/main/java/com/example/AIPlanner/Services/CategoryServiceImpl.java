@@ -54,12 +54,23 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse updateCategory(Long id, UpdateCategoryRequest request) {
         Category category = getCategoryOrThrow(id);
 
-        if (categoryRepository.existsByName(request.getName())
-                && !category.getName().equalsIgnoreCase(request.getName())) {
-            throw new IllegalArgumentException("Category with this name already exists");
+        if (request.getName() != null) {
+            String trimmedName = request.getName().trim();
+
+            if (trimmedName.isBlank()) {
+                throw new IllegalArgumentException("Category name must not be blank");
+            }
+
+            if (categoryRepository.existsByName(trimmedName)
+                    && !category.getName().equalsIgnoreCase(trimmedName)) {
+                throw new IllegalArgumentException("Category with this name already exists");
+            }
+
+            request.setName(trimmedName);
         }
 
         categoryMapper.updateEntity(category, request);
+
         Category updatedCategory = categoryRepository.save(category);
 
         return categoryMapper.toResponse(updatedCategory);
