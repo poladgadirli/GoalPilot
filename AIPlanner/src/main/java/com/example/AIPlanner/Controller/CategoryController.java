@@ -5,6 +5,7 @@ import com.example.AIPlanner.DTOs.Requests.Categories.CreateCategoryRequest;
 import com.example.AIPlanner.DTOs.Requests.Categories.UpdateCategoryRequest;
 import com.example.AIPlanner.DTOs.Responses.Categories.CategoryResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
+@SecurityRequirement(name = "bearerAuth")
 public class CategoryController {
 
     private final CategoryService categoryService;
