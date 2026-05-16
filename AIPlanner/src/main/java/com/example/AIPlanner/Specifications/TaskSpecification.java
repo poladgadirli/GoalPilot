@@ -4,7 +4,7 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.Entities.Task;
 import org.springframework.data.jpa.domain.Specification;
 
-public class TaskSpecification {
+    public class TaskSpecification {
 
     public static Specification<Task> filter(TaskFilterRequest filter) {
         return (root, query, criteriaBuilder) -> {
