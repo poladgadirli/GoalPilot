@@ -1,21 +1,31 @@
 package com.example.AIPlanner.Entities;
 
 import com.example.AIPlanner.Entities.Common.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "categories")
 public class Category extends BaseEntity<Long> {
 
-    @Column(nullable = false, length = 100, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(length = 20)
     private String color;
 
     public Category() {
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getName() {
