@@ -61,7 +61,7 @@ public class CategoryServiceImpl implements CategoryService {
                 throw new IllegalArgumentException("Category name must not be blank");
             }
 
-            if (categoryRepository.existsByName(trimmedName)
+            if (categoryRepository.existsByNameIgnoreCase(trimmedName)
                     && !category.getName().equalsIgnoreCase(trimmedName)) {
                 throw new IllegalArgumentException("Category with this name already exists");
             }
