@@ -38,6 +38,18 @@ import org.springframework.data.jpa.domain.Specification;
                 );
             }
 
+            if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
+                String keyword = "%" + filter.getKeyword().toLowerCase().trim() + "%";
+
+                predicate = criteriaBuilder.and(
+                        predicate,
+                        criteriaBuilder.or(
+                                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), keyword),
+                                criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), keyword)
+                        )
+                );
+            }
+
             return predicate;
         };
     }
