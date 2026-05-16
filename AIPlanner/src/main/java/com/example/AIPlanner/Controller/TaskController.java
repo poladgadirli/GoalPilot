@@ -15,10 +15,22 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id",
+            "title",
+            "createdAt",
+            "dueDate",
+            "priority",
+            "status",
+            "completed",
+            "estimatedMinutes"
+    );
 
     private final TaskService taskService;
 
@@ -34,9 +46,15 @@ public class TaskController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String direction
     ) {
-        Sort sort = direction.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy)
+                ? sortBy
+                : "createdAt";
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+
+        Sort sort = Sort.by(sortDirection, safeSortBy);
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
