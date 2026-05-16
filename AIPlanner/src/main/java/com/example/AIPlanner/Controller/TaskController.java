@@ -6,6 +6,7 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/tasks")
+@SecurityRequirement(name = "bearerAuth")
 public class TaskController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
