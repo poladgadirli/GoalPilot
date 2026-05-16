@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TaskServiceImpl implements TaskService {
 
@@ -81,6 +83,17 @@ public class TaskServiceImpl implements TaskService {
         Task savedTask = taskRepository.save(task);
 
         return taskMapper.toResponse(savedTask);
+    }
+
+    @Override
+    public List<TaskResponse> getByCategory(Long categoryId) {
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+
+        return taskRepository.findByCategoryId(categoryId)
+                .stream()
+                .map(taskMapper::toResponse)
+                .toList();
     }
 
     @Override
