@@ -8,6 +8,8 @@ import com.example.AIPlanner.Enums.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface TaskService {
 
     Page<TaskResponse> getAll(Pageable pageable);
@@ -23,6 +25,8 @@ public interface TaskService {
     TaskResponse getById(Long id);
 
     TaskResponse create(CreateTaskRequest request);
+
+    List<TaskResponse> getByCategory(Long categoryId);
 
     TaskResponse update(Long id, UpdateTaskRequest request);
 
