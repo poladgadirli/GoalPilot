@@ -7,8 +7,6 @@ import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Entities.Category;
 import com.example.AIPlanner.Entities.Task;
-import com.example.AIPlanner.Enums.TaskPriority;
-import com.example.AIPlanner.Enums.TaskStatus;
 import com.example.AIPlanner.Exceptions.CategoryNotFoundException;
 import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
@@ -40,28 +38,7 @@ public class TaskServiceImpl implements TaskService {
                 .map(taskMapper::toResponse);
     }
 
-    @Override
-    public Page<TaskResponse> getFilteredTasks(
-            TaskStatus status,
-            TaskPriority priority,
-            Boolean completed,
-            String keyword,
-            Pageable pageable
-    ) {
-        String searchKeyword = (keyword == null || keyword.trim().isEmpty())
-                ? ""
-                : keyword.trim();
 
-        Page<Task> tasks = taskRepository.findFilteredTasks(
-                status,
-                priority,
-                completed,
-                searchKeyword,
-                pageable
-        );
-
-        return tasks.map(taskMapper::toResponse);
-    }
 
     @Override
     public TaskResponse getById(Long id) {
