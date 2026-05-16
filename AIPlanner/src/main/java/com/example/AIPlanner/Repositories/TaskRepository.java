@@ -21,7 +21,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
           OR (:completed = false AND t.status <> com.example.AIPlanner.Enums.TaskStatus.DONE)
       )
       AND (
-          :keyword IS NULL
+          :keyword = ''
           OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
           OR LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
       )

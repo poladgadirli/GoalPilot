@@ -45,7 +45,7 @@ public class TaskServiceImpl implements TaskService {
             Pageable pageable
     ) {
         String searchKeyword = (keyword == null || keyword.trim().isEmpty())
-                ? null
+                ? ""
                 : keyword.trim();
 
         Page<Task> tasks = taskRepository.findFilteredTasks(

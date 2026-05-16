@@ -34,6 +34,7 @@ public class TaskMapper {
         if (request.getPriority() != null) {
             task.setPriority(request.getPriority());
         }
+
         if (request.getStatus() != null) {
             task.setStatus(request.getStatus());
         }
@@ -49,9 +50,11 @@ public class TaskMapper {
                 task.getDueDate(),
                 task.getPriority(),
                 task.getStatus(),
-                task.getEstimatedMinutes()
+                task.getEstimatedMinutes(),
+                toCategorySummary(task.getCategory())
         );
     }
+
     private CategorySummaryResponse toCategorySummary(Category category) {
         if (category == null) {
             return null;
