@@ -40,9 +40,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-        if (categoryRepository.existsByName(request.getName())) {
+        String trimmedName = request.getName().trim();
+
+        if (categoryRepository.existsByNameIgnoreCase(trimmedName)) {
             throw new IllegalArgumentException("Category with this name already exists");
         }
+
+        request.setName(trimmedName);
 
         Category category = categoryMapper.toEntity(request);
         Category savedCategory = categoryRepository.save(category);
