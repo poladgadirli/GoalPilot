@@ -2,6 +2,7 @@ package com.example.AIPlanner.Services;
 
 import com.example.AIPlanner.Abstracts.Services.TaskService;
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
+import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Entities.Category;
@@ -13,6 +14,7 @@ import com.example.AIPlanner.Exceptions.TaskNotFoundException;
 import com.example.AIPlanner.Mappers.TaskMapper;
 import com.example.AIPlanner.Repositories.CategoryRepository;
 import com.example.AIPlanner.Repositories.TaskRepository;
+import com.example.AIPlanner.Specifications.TaskSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,8 +35,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Page<TaskResponse> getAll(Pageable pageable) {
-        return taskRepository.findAll(pageable)
+    public Page<TaskResponse> getAll(TaskFilterRequest filter, Pageable pageable) {
+        return taskRepository.findAll(TaskSpecification.filter(filter), pageable)
                 .map(taskMapper::toResponse);
     }
 
