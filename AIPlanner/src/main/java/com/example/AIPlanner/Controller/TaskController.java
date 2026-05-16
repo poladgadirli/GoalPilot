@@ -79,6 +79,13 @@ public class TaskController {
         return ApiResponse.success("Task updated successfully", task);
     }
 
+    @GetMapping("/category/{categoryId}")
+    public ApiResponse<List<TaskResponse>> getByCategory(@PathVariable Long categoryId) {
+        List<TaskResponse> tasks = taskService.getByCategory(categoryId);
+
+        return ApiResponse.success("Tasks fetched by category successfully", tasks);
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<String> delete(@PathVariable Long id) {
         taskService.delete(id);
