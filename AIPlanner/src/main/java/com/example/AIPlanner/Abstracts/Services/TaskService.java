@@ -1,6 +1,7 @@
 package com.example.AIPlanner.Abstracts.Services;
 
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
+import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
 import com.example.AIPlanner.Enums.TaskPriority;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public interface TaskService {
 
-    Page<TaskResponse> getAll(Pageable pageable);
+    Page<TaskResponse> getAll(TaskFilterRequest filter, Pageable pageable);
 
     Page<TaskResponse> getFilteredTasks(
             TaskStatus status,
