@@ -1,6 +1,7 @@
 package com.example.AIPlanner.DTOs.Requests.Categories;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class CreateCategoryRequest {
@@ -10,6 +11,10 @@ public class CreateCategoryRequest {
     private String name;
 
     @Size(max = 20, message = "Color must be at most 20 characters")
+    @Pattern(
+            regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+            message = "Color must be a valid HEX code"
+    )
     private String color;
 
     public CreateCategoryRequest() {
