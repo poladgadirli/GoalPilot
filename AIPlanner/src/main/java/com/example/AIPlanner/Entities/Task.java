@@ -1,17 +1,15 @@
 package com.example.AIPlanner.Entities;
 
+import com.example.AIPlanner.Entities.Common.BaseEntity;
 import com.example.AIPlanner.Enums.TaskPriority;
 import com.example.AIPlanner.Enums.TaskStatus;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
-public class Task {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Task extends BaseEntity<Long> {
 
     @Column(nullable = false, length = 150)
     private String title;
@@ -23,13 +21,19 @@ public class Task {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority = TaskPriority.MEDIUM;
+
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status = TaskStatus.TODO;
+
+    private boolean completed = false;
+
+    private LocalDateTime dueDate;
+
+    private Integer estimatedMinutes;
 
     public Task() {
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getTitle() {
@@ -48,29 +52,13 @@ public class Task {
         this.description = description;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public Category getCategory()
-    {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(Category category)
-    {
+    public void setCategory(Category category) {
         this.category = category;
     }
-
-    @Enumerated(EnumType.STRING)
-    private TaskPriority priority = TaskPriority.MEDIUM;
-
-    @Enumerated(EnumType.STRING)
-    private TaskStatus status = TaskStatus.TODO;
-
-    private LocalDateTime dueDate;
-
-    private Integer estimatedMinutes;
 
     public TaskPriority getPriority() {
         return priority;
@@ -86,6 +74,14 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public LocalDateTime getDueDate() {
