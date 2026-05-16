@@ -1,6 +1,7 @@
 package com.example.AIPlanner.Controller;
 
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
+import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
@@ -29,14 +30,11 @@ public class TaskController {
 
     @GetMapping
     public ApiResponse<Page<TaskResponse>> getAll(
+            @ModelAttribute TaskFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction,
-            @RequestParam(required = false) TaskStatus status,
-            @RequestParam(required = false) TaskPriority priority,
-            @RequestParam(required = false) Boolean completed,
-            @RequestParam(required = false) String keyword
+            @RequestParam(defaultValue = "desc") String direction
     ) {
         Sort sort = direction.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
@@ -44,13 +42,7 @@ public class TaskController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<TaskResponse> tasks = taskService.getFilteredTasks(
-                status,
-                priority,
-                completed,
-                keyword,
-                pageable
-        );
+        Page<TaskResponse> tasks = taskService.getAll(filter, pageable);
 
         return ApiResponse.success("Tasks fetched successfully", tasks);
     }
