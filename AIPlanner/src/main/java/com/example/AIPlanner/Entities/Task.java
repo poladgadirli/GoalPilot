@@ -11,6 +11,10 @@ import java.time.LocalDateTime;
 @Table(name = "tasks")
 public class Task extends BaseEntity<Long> {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column(nullable = false, length = 150)
     private String title;
 
