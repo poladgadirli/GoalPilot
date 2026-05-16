@@ -29,13 +29,6 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
           OR LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
       )
     """)
-    Page<Task> findFilteredTasks(
-            @Param("status") TaskStatus status,
-            @Param("priority") TaskPriority priority,
-            @Param("completed") Boolean completed,
-            @Param("keyword") String keyword,
-            Pageable pageable
-    );
 
     List<Task> findByCategoryId(Long categoryId);
 }

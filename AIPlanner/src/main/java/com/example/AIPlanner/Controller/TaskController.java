@@ -1,19 +1,17 @@
 package com.example.AIPlanner.Controller;
 
+import com.example.AIPlanner.Abstracts.Services.TaskService;
 import com.example.AIPlanner.DTOs.Requests.Tasks.CreateTaskRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.TaskFilterRequest;
 import com.example.AIPlanner.DTOs.Requests.Tasks.UpdateTaskRequest;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.DTOs.Responses.Tasks.TaskResponse;
-import com.example.AIPlanner.Enums.TaskPriority;
-import com.example.AIPlanner.Enums.TaskStatus;
-import com.example.AIPlanner.Services.TaskServiceImpl;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,15 +20,15 @@ import java.util.List;
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    private final TaskServiceImpl taskService;
+    private final TaskService taskService;
 
-    public TaskController(TaskServiceImpl taskService) {
+    public TaskController(TaskService taskService) {
         this.taskService = taskService;
     }
 
     @GetMapping
     public ApiResponse<Page<TaskResponse>> getAll(
-            @ModelAttribute TaskFilterRequest filter,
+            @ParameterObject @ModelAttribute TaskFilterRequest filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
