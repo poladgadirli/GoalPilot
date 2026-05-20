@@ -81,6 +81,8 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Invalid email/username or password");
         }
 
+        refreshTokenService.revokeAllUserRefreshTokens(user);
+
         String accessToken = jwtService.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
