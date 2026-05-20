@@ -26,6 +26,8 @@ public class UpdateTaskRequest {
 
     private TaskStatus status;
 
+    private Boolean completed;
+
     public String getTitle() {
         return title;
     }
@@ -72,5 +74,13 @@ public class UpdateTaskRequest {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public Boolean getCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
     }
 }

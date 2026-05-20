@@ -27,9 +27,17 @@ public class TaskMapper {
     }
 
     public void updateEntity(Task task, UpdateTaskRequest request) {
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setDueDate(request.getDueDate());
+        if (request.getTitle() != null) {
+            task.setTitle(request.getTitle());
+        }
+
+        if (request.getDescription() != null) {
+            task.setDescription(request.getDescription());
+        }
+
+        if (request.getDueDate() != null) {
+            task.setDueDate(request.getDueDate());
+        }
 
         if (request.getPriority() != null) {
             task.setPriority(request.getPriority());
@@ -37,6 +45,15 @@ public class TaskMapper {
 
         if (request.getStatus() != null) {
             task.setStatus(request.getStatus());
+            task.setCompleted(request.getStatus() == TaskStatus.DONE);
+        }
+
+        if (request.getCompleted() != null) {
+            task.setCompleted(request.getCompleted());
+
+            if (request.getStatus() == null) {
+                task.setStatus(request.getCompleted() ? TaskStatus.DONE : TaskStatus.TODO);
+            }
         }
     }
 
@@ -45,7 +62,7 @@ public class TaskMapper {
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),
-                task.getStatus() == TaskStatus.DONE,
+                task.isCompleted(),
                 task.getCreatedAt(),
                 task.getDueDate(),
                 task.getPriority(),
