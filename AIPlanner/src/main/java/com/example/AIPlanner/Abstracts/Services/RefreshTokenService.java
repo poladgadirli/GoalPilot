@@ -13,5 +13,4 @@ public interface RefreshTokenService {
 
     void revokeRefreshToken(String token);
 
-    List<RefreshToken> findByUserAndRevokedFalse(User user);
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -62,5 +63,16 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
+    }
+
+    @Override
+    public void revokeAllUserRefreshTokens(User user) {
+        List<RefreshToken> activeTokens = refreshTokenRepository.findByUserAndRevokedFalse(user);
+
+        for (RefreshToken token : activeTokens) {
+            token.setRevoked(true);
+        }
+
+        refreshTokenRepository.saveAll(activeTokens);
     }
 }
