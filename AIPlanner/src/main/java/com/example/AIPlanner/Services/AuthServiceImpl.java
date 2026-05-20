@@ -1,10 +1,14 @@
 package com.example.AIPlanner.Services;
 
 import com.example.AIPlanner.Abstracts.Services.AuthService;
+import com.example.AIPlanner.Abstracts.Services.RefreshTokenService;
 import com.example.AIPlanner.DTOs.Requests.Auth.LoginRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.LogoutRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.RefreshTokenRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RegisterRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.AuthResponse;
 import com.example.AIPlanner.DTOs.Responses.Auth.UserResponse;
+import com.example.AIPlanner.Entities.RefreshToken;
 import com.example.AIPlanner.Entities.User;
 import com.example.AIPlanner.Repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,15 +20,18 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            RefreshTokenService refreshTokenService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -51,10 +58,12 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        String token = jwtService.generateToken(savedUser);
+        String accessToken = jwtService.generateAccessToken(savedUser);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
 
         return new AuthResponse(
-                token,
+                accessToken,
+                refreshToken.getToken(),
                 toUserResponse(savedUser)
         );
     }
@@ -72,12 +81,36 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Invalid email/username or password");
         }
 
-        String token = jwtService.generateToken(user);
+        String accessToken = jwtService.generateAccessToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         return new AuthResponse(
-                token,
+                accessToken,
+                refreshToken.getToken(),
                 toUserResponse(user)
         );
+    }
+
+    @Override
+    public AuthResponse refreshToken(RefreshTokenRequest request) {
+        RefreshToken refreshToken = refreshTokenService.validateRefreshToken(
+                request.getRefreshToken()
+        );
+
+        User user = refreshToken.getUser();
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        return new AuthResponse(
+                newAccessToken,
+                refreshToken.getToken(),
+                toUserResponse(user)
+        );
+    }
+
+    @Override
+    public void logout(LogoutRequest request) {
+        refreshTokenService.revokeRefreshToken(request.getRefreshToken());
     }
 
     private UserResponse toUserResponse(User user) {
