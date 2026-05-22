@@ -5,4 +5,6 @@ import com.example.AIPlanner.Entities.User;
 public interface CurrentUserService {
 
     User getCurrentUser();
+
+    Long getCurrentUserId();
 }
