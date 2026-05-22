@@ -79,4 +79,18 @@ public class PlanProgressServiceImpl implements PlanProgressService {
 
         return Math.round(percentage * 100.0) / 100.0;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isPlanCompleted(Long planId) {
+        long totalTasks = planTaskRepository.countByPlanDayPlanId(planId);
+
+        if (totalTasks == 0) {
+            return false;
+        }
+
+        long completedTasks = planTaskRepository.countByPlanDayPlanIdAndCompleted(planId, true);
+
+        return totalTasks == completedTasks;
+    }
 }
