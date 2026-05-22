@@ -6,6 +6,8 @@ import com.example.AIPlanner.Enums.PlanStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "plans")
@@ -41,6 +43,10 @@ public class Plan extends BaseEntity<Long> {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("dayNumber ASC")
+    private List<PlanDay> days = new ArrayList<>();
 
     public Plan() {
     }
@@ -136,5 +142,23 @@ public class Plan extends BaseEntity<Long> {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public List<PlanDay> getDays() {
+        return days;
+    }
+
+    public void setDays(List<PlanDay> days) {
+        this.days = days;
+    }
+
+    public void addDay(PlanDay day) {
+        days.add(day);
+        day.setPlan(this);
+    }
+
+    public void removeDay(PlanDay day) {
+        days.remove(day);
+        day.setPlan(null);
     }
 }
