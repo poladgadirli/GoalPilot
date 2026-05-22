@@ -13,4 +13,6 @@ public interface PlanTaskRepository extends JpaRepository<PlanTask, Long> {
     Optional<PlanTask> findByIdAndPlanDayId(Long id, Long planDayId);
 
     void deleteAllByPlanDayId(Long planDayId);
+
+    Optional<PlanTask> findByIdAndPlanDayPlanUserId(Long id, Long userId);
 }
