@@ -15,4 +15,7 @@ public interface PlanDayRepository extends JpaRepository<PlanDay, Long> {
     boolean existsByPlanIdAndDayNumber(Long planId, Integer dayNumber);
 
     void deleteAllByPlanId(Long planId);
+
+    long countByPlanId(Long planId);
+
 }
