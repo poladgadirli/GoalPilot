@@ -61,7 +61,7 @@ public class PlanMapper {
         );
     }
 
-    private PlanTaskResponse toTaskResponse(PlanTask planTask) {
+    public PlanTaskResponse toTaskResponse(PlanTask planTask) {
         return new PlanTaskResponse(
                 planTask.getId(),
                 planTask.getTitle(),
