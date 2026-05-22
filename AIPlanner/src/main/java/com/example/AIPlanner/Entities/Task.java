@@ -4,6 +4,8 @@ import com.example.AIPlanner.Entities.Common.BaseEntity;
 import com.example.AIPlanner.Enums.TaskPriority;
 import com.example.AIPlanner.Enums.TaskStatus;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +25,7 @@ public class Task extends BaseEntity<Long> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Category category;
 
     @Enumerated(EnumType.STRING)
