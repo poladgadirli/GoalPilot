@@ -15,4 +15,8 @@ public interface PlanTaskRepository extends JpaRepository<PlanTask, Long> {
     void deleteAllByPlanDayId(Long planDayId);
 
     Optional<PlanTask> findByIdAndPlanDayPlanUserId(Long id, Long userId);
+
+    long countByPlanDayPlanId(Long planId);
+
+    long countByPlanDayPlanIdAndCompleted(Long planId, Boolean completed);
 }
