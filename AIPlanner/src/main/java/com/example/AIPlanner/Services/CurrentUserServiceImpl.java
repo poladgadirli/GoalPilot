@@ -31,4 +31,9 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
     }
+
+    @Override
+    public Long getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
 }
