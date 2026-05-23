@@ -1,4 +1,4 @@
-package com.example.AIPlanner;
+package com.example.AIPlanner.Clients;
 
 import com.example.AIPlanner.Abstracts.Clients.AiPlanClient;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanDayResponse;
@@ -6,12 +6,14 @@ import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanResponse;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanTaskResponse;
 import com.example.AIPlanner.Entities.Goal;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "ai.provider", havingValue = "fake", matchIfMissing = true)
 public class FakeAiPlanClient implements AiPlanClient {
 
     @Override
