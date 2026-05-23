@@ -7,6 +7,7 @@ import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 import com.example.AIPlanner.Abstracts.Services.PlanProgressService;
 import com.example.AIPlanner.DTOs.Responses.Plans.PlanProgressResponse;
+import com.example.AIPlanner.Abstracts.Services.AiPlanGenerationService;
 
 @RestController
 public class PlanController {
@@ -14,15 +15,17 @@ public class PlanController {
     private final ManualPlanGenerationService manualPlanGenerationService;
     private final PlanService planService;
     private final PlanProgressService planProgressService;
+    private final AiPlanGenerationService aiPlanGenerationService;
 
     public PlanController(
             ManualPlanGenerationService manualPlanGenerationService,
             PlanService planService,
-            PlanProgressService planProgressService
+            PlanProgressService planProgressService, AiPlanGenerationService aiPlanGenerationService
     ) {
         this.manualPlanGenerationService = manualPlanGenerationService;
         this.planService = planService;
         this.planProgressService = planProgressService;
+        this.aiPlanGenerationService = aiPlanGenerationService;
     }
 
     @PostMapping("/api/goals/{goalId}/plans/generate-manual")
@@ -51,5 +54,12 @@ public class PlanController {
         PlanProgressResponse progress = planProgressService.getPlanProgress(planId);
 
         return ApiResponse.success("Plan progress fetched successfully", progress);
+    }
+
+    @PostMapping("/api/goals/{goalId}/plans/generate-ai")
+    public ApiResponse<PlanResponse> generateAiPlan(@PathVariable Long goalId) {
+        PlanResponse plan = aiPlanGenerationService.generateAiPlan(goalId);
+
+        return ApiResponse.success("AI plan generated successfully", plan);
     }
 }
