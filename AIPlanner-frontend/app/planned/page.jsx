@@ -1,10 +1,385 @@
 "use client";
-import { jsx } from "react/jsx-runtime";
+
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { CalendarDays, Check, Clock, Plus, Search } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { TaskCollectionPage } from "@/components/dashboard/task-collection-page";
+import { fetchTasksWithParams, updateTask } from "@/lib/api";
+
+function getLocalDateKey(value = new Date()) {
+  if (typeof value === "string") {
+    const dateOnly = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    if (dateOnly) return dateOnly;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDaysKey(days) {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return getLocalDateKey(date);
+}
+
+function isTaskDone(task) {
+  return Boolean(task.completed) || task.status === "DONE";
+}
+
+function formatDateTime(value) {
+  if (!value) return "No due date";
+  return new Date(value).toLocaleString(void 0, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function formatMinutes(minutes) {
+  if (!minutes) return null;
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+}
+
+function priorityClass(priority) {
+  switch (priority) {
+    case "HIGH":
+      return "bg-error-container/50 text-error";
+    case "LOW":
+      return "bg-surface-container text-on-surface-variant";
+    default:
+      return "bg-secondary-container text-on-secondary-container";
+  }
+}
+
+function statusLabel(task) {
+  if (isTaskDone(task)) return "DONE";
+  return task.status ?? "TODO";
+}
+
+function matchesStatus(task, statusFilter) {
+  if (statusFilter === "all") return true;
+  if (statusFilter === "DONE") return isTaskDone(task);
+  return !isTaskDone(task) && statusLabel(task) === statusFilter;
+}
+
+function isInNextWeek(dueKey, todayKey) {
+  const weekEndKey = addDaysKey(7);
+  return dueKey >= todayKey && dueKey <= weekEndKey;
+}
+
+function TaskCard({ task, isUpdating, onComplete }) {
+  const navigate = useNavigate();
+  const done = isTaskDone(task);
+  const estimated = formatMinutes(task.estimatedMinutes);
+
+  const openTask = () => navigate(`/tasks/${task.id}`);
+
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={openTask}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") openTask();
+      }}
+      className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex items-start gap-3 hover:border-primary/30 transition-all cursor-pointer"
+    >
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (!done) onComplete(task);
+        }}
+        disabled={done || isUpdating}
+        aria-label={done ? "Task completed" : "Mark task as complete"}
+        className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors ${
+          done ? "border-primary bg-primary" : "border-outline-variant hover:border-primary"
+        } disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        {done ? <Check className="h-3 w-3 text-on-primary" /> : null}
+      </button>
+
+      <div className="min-w-0 flex-1">
+        <h3 className={`font-semibold break-words ${done ? "text-outline line-through" : "text-on-surface"}`}>
+          {task.title}
+        </h3>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays className="h-3 w-3" />
+            {formatDateTime(task.dueDate)}
+          </span>
+          {task.category?.name ? <span className="px-2 py-1 bg-surface-container rounded">{task.category.name}</span> : null}
+          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{task.priority ?? "MEDIUM"}</span>
+          <span className="px-2 py-1 bg-surface-container rounded font-medium">{statusLabel(task)}</span>
+          {estimated ? (
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {estimated}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlannedContent() {
+  const todayKey = useMemo(() => getLocalDateKey(), []);
+  const tomorrowKey = useMemo(() => addDaysKey(1), []);
+  const weekEndKey = useMemo(() => addDaysKey(7), []);
+  const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [updatingTaskIds, setUpdatingTaskIds] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTasks() {
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const page = await fetchTasksWithParams({ size: 200, sortBy: "dueDate", direction: "asc" });
+        if (!isMounted) return;
+        setTasks((page.content ?? []).filter((task) => Boolean(task.dueDate)));
+      } catch (error) {
+        if (!isMounted) return;
+        setErrorMessage(error instanceof Error ? error.message : "Unable to load planned tasks.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadTasks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const summary = useMemo(() => {
+    const openTasks = tasks.filter((task) => !isTaskDone(task));
+    return {
+      planned: tasks.length,
+      today: openTasks.filter((task) => getLocalDateKey(task.dueDate) === todayKey).length,
+      upcoming: openTasks.filter((task) => getLocalDateKey(task.dueDate) > todayKey).length,
+      overdue: openTasks.filter((task) => getLocalDateKey(task.dueDate) < todayKey).length
+    };
+  }, [tasks, todayKey]);
+
+  const filteredTasks = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return tasks.filter((task) => {
+      const dueKey = getLocalDateKey(task.dueDate);
+      const matchesSearch = !normalizedSearch || task.title.toLowerCase().includes(normalizedSearch);
+      const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      let matchesDate = true;
+      if (dateFilter === "today") matchesDate = dueKey === todayKey;
+      if (dateFilter === "week") matchesDate = isInNextWeek(dueKey, todayKey);
+      if (dateFilter === "overdue") matchesDate = dueKey < todayKey && !isTaskDone(task);
+      return matchesSearch && matchesStatus(task, statusFilter) && matchesPriority && matchesDate;
+    });
+  }, [dateFilter, priorityFilter, searchTerm, statusFilter, tasks, todayKey]);
+
+  const groups = useMemo(() => {
+    const grouped = {
+      overdue: [],
+      today: [],
+      tomorrow: [],
+      week: [],
+      later: []
+    };
+    for (const task of filteredTasks) {
+      const dueKey = getLocalDateKey(task.dueDate);
+      if (dueKey < todayKey) grouped.overdue.push(task);
+      else if (dueKey === todayKey) grouped.today.push(task);
+      else if (dueKey === tomorrowKey) grouped.tomorrow.push(task);
+      else if (dueKey <= weekEndKey) grouped.week.push(task);
+      else grouped.later.push(task);
+    }
+    return [
+      { key: "overdue", title: "Overdue", tasks: grouped.overdue },
+      { key: "today", title: "Today", tasks: grouped.today },
+      { key: "tomorrow", title: "Tomorrow", tasks: grouped.tomorrow },
+      { key: "week", title: "This Week", tasks: grouped.week },
+      { key: "later", title: "Later", tasks: grouped.later }
+    ].filter((group) => group.tasks.length > 0);
+  }, [filteredTasks, todayKey, tomorrowKey, weekEndKey]);
+
+  const handleCompleteTask = async (task) => {
+    setUpdatingTaskIds((ids) => [...ids, task.id]);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await updateTask(task.id, {
+        completed: true,
+        status: "DONE"
+      });
+      setTasks((currentTasks) => currentTasks.map((entry) => entry.id === task.id ? updatedTask : entry));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update task.");
+    } finally {
+      setUpdatingTaskIds((ids) => ids.filter((id) => id !== task.id));
+    }
+  };
+
+  const summaryCards = [
+    { label: "Planned Tasks", value: summary.planned },
+    { label: "Due Today", value: summary.today },
+    { label: "Upcoming", value: summary.upcoming },
+    { label: "Overdue", value: summary.overdue }
+  ];
+
+  const hasFilters = searchTerm.trim() || statusFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all";
+  const noPlannedTasks = !isLoading && !errorMessage && tasks.length === 0;
+  const noFilteredResults = !isLoading && !errorMessage && tasks.length > 0 && groups.length === 0;
+
+  return (
+    <section className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-serif font-semibold text-on-surface">Planned</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">Tasks scheduled for upcoming days</p>
+        </div>
+        <Link
+          to="/tasks/new"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
+        >
+          <Plus className="h-4 w-4" />
+          New Task
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {summaryCards.map((card) => (
+          <div key={card.label} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
+            <p className="text-xs font-medium text-on-surface-variant">{card.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-on-surface">{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant grid grid-cols-1 lg:grid-cols-[1fr_auto_auto_auto] gap-3">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search planned tasks"
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+          />
+        </label>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="all">All statuses</option>
+          <option value="TODO">Todo</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="DONE">Done</option>
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(event) => setPriorityFilter(event.target.value)}
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="all">All priorities</option>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+        </select>
+        <select
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="all">All planned</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="overdue">Overdue</option>
+        </select>
+      </div>
+
+      {isLoading ? (
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
+          Loading planned tasks...
+        </div>
+      ) : null}
+
+      {errorMessage ? (
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error">
+          {errorMessage}
+        </div>
+      ) : null}
+
+      {noPlannedTasks ? (
+        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
+          <h3 className="text-lg font-semibold text-on-surface">No planned tasks yet</h3>
+          <p className="mt-2 text-sm text-on-surface-variant">Add due dates to your tasks to organize your schedule.</p>
+          <Link
+            to="/tasks/new"
+            className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+          >
+            Create Task
+          </Link>
+        </div>
+      ) : null}
+
+      {noFilteredResults ? (
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
+          No tasks match your filters.
+        </div>
+      ) : null}
+
+      {!isLoading && !errorMessage && groups.length > 0 ? (
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <section key={group.key} className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-lg font-semibold text-on-surface">{group.title}</h3>
+                <span className="text-xs text-on-surface-variant">
+                  {group.tasks.length} {group.tasks.length === 1 ? "task" : "tasks"}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {group.tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    isUpdating={updatingTaskIds.includes(task.id)}
+                    onComplete={handleCompleteTask}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : null}
+
+      {hasFilters && !isLoading && !errorMessage && groups.length > 0 ? (
+        <p className="text-xs text-on-surface-variant">
+          Showing {filteredTasks.length} of {tasks.length} planned tasks.
+        </p>
+      ) : null}
+    </section>
+  );
+}
 
 function PlannedPage() {
-  return /* @__PURE__ */ jsx(AppShell, { title: "Planned", children: /* @__PURE__ */ jsx(TaskCollectionPage, { title: "Planned Tasks", filter: "planned", emptyMessage: "No planned tasks yet." }) });
+  return (
+    <AppShell title="Planned">
+      <PlannedContent />
+    </AppShell>
+  );
 }
 
 export default PlannedPage;

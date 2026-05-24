@@ -41,28 +41,28 @@ function ActiveGoals({ refreshKey = 0 }) {
       isMounted = false;
     };
   }, [refreshKey]);
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ jsx(Target, { className: "w-5 h-5 text-primary" }),
-        /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Active Goals" })
+  return /* @__PURE__ */ jsxs("section", { className: "space-y-4 w-full min-w-0", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
+        /* @__PURE__ */ jsx(Target, { className: "w-5 h-5 flex-shrink-0 text-primary" }),
+        /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface truncate", children: "Active Goals" })
       ] }),
-      /* @__PURE__ */ jsxs(Link, { to: "/goals", className: "text-primary font-medium text-sm flex items-center gap-1 hover:gap-2 transition-all", children: [
+      /* @__PURE__ */ jsxs(Link, { to: "/goals", className: "text-primary font-medium text-sm inline-flex flex-shrink-0 items-center gap-1 hover:gap-2 transition-all", children: [
         "View all ",
         /* @__PURE__ */ jsx(ArrowRight, { className: "w-4 h-4" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+    /* @__PURE__ */ jsxs("div", { className: "space-y-3 w-full min-w-0", children: [
       isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading goals..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : activeGoals.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No goals yet." }) : null,
       activeGoals.map((goal) => /* @__PURE__ */ jsxs(
         Link,
         {
           to: `/goals/${goal.id}`,
-          className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant hover:shadow-md transition-all",
+          className: "block w-full min-w-0 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant hover:border-primary/30 hover:shadow-md transition-all",
           children: [
-            /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between mb-3", children: [
-              /* @__PURE__ */ jsxs("div", { children: [
-                /* @__PURE__ */ jsx("h3", { className: "font-semibold text-on-surface", children: goal.title }),
+            /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-3 mb-3 min-w-0", children: [
+              /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx("h3", { className: "font-semibold text-on-surface break-words", children: goal.title }),
                 /* @__PURE__ */ jsxs("p", { className: "text-xs text-on-surface-variant mt-1", children: [
                   "Due: ",
                   goal.dueDate
@@ -71,20 +71,20 @@ function ActiveGoals({ refreshKey = 0 }) {
               /* @__PURE__ */ jsx(
                 "span",
                 {
-                  className: `px-2 py-1 rounded text-xs font-medium ${goal.status === "On Track" ? "bg-green-100/50 text-green-700" : goal.status === "At Risk" ? "bg-orange-100/50 text-orange-700" : "bg-error-container/30 text-error"}`,
+                  className: `flex-shrink-0 whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${goal.status === "On Track" ? "bg-green-100/50 text-green-700" : goal.status === "At Risk" ? "bg-orange-100/50 text-orange-700" : "bg-error-container/30 text-error"}`,
                   children: goal.status
                 }
               )
             ] }),
-            /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
-              /* @__PURE__ */ jsx("div", { className: "flex-1 h-2 bg-surface-container rounded-full overflow-hidden", children: /* @__PURE__ */ jsx(
+            /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
+              /* @__PURE__ */ jsx("div", { className: "min-w-0 flex-1 h-2 bg-surface-container rounded-full overflow-hidden", children: /* @__PURE__ */ jsx(
                 "div",
                 {
                   className: "h-full bg-primary transition-all duration-300",
                   style: { width: `${goal.progress}%` }
                 }
               ) }),
-              /* @__PURE__ */ jsxs("span", { className: "text-xs font-semibold text-on-surface-variant min-w-fit", children: [
+              /* @__PURE__ */ jsxs("span", { className: "flex-shrink-0 text-xs font-semibold text-on-surface-variant tabular-nums", children: [
                 goal.progress,
                 "%"
               ] })
