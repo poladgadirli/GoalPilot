@@ -31,7 +31,7 @@ function TaskCollectionPage({ title, emptyMessage, filter = "all" }) {
       try {
         const apiParams = { size: 100, sortBy: filter === "planned" ? "dueDate" : "createdAt", direction: filter === "planned" ? "asc" : "desc" };
         if (filter === "important") {
-          apiParams.priority = "HIGH";
+          apiParams.important = true;
         }
         const page = await fetchTasksWithParams(apiParams);
         const today = new Date();
@@ -41,6 +41,9 @@ function TaskCollectionPage({ title, emptyMessage, filter = "all" }) {
         }
         if (filter === "planned") {
           loadedTasks = loadedTasks.filter((task) => Boolean(task.dueDate));
+        }
+        if (filter === "important") {
+          loadedTasks = loadedTasks.filter((task) => task.important);
         }
         if (!isMounted) return;
         setTasks(loadedTasks);

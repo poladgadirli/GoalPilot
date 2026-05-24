@@ -13,6 +13,7 @@ public class TaskResponse
     private String title;
     private String description;
     private boolean completed;
+    private boolean important;
     private LocalDateTime createdAt;
     private LocalDateTime dueDate;
     private TaskPriority priority;
@@ -25,6 +26,7 @@ public class TaskResponse
             String title,
             String description,
             boolean completed,
+            boolean important,
             LocalDateTime createdAt,
             LocalDateTime dueDate,
             TaskPriority priority,
@@ -36,6 +38,7 @@ public class TaskResponse
         this.title = title;
         this.description = description;
         this.completed = completed;
+        this.important = important;
         this.createdAt = createdAt;
         this.dueDate = dueDate;
         this.priority = priority;
@@ -58,6 +61,10 @@ public class TaskResponse
 
     public boolean isCompleted() {
         return completed;
+    }
+
+    public boolean isImportant() {
+        return important;
     }
 
     public LocalDateTime getCreatedAt() {

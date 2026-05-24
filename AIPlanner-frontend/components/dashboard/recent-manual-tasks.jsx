@@ -2,14 +2,15 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Clock, Check, Plus } from "lucide-react";
-import { fetchTasks, updateTask } from "@/lib/api";
+import { Clock, Check, Plus, Star } from "lucide-react";
+import { fetchTasks, updateTask, updateTaskImportant } from "@/lib/api";
 function RecentManualTasks({ refreshKey = 0, onDataChange }) {
   const navigate = useNavigate();
   const [recentManualTasks, setRecentManualTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [updatingTaskIds, setUpdatingTaskIds] = useState([]);
+  const [updatingImportantIds, setUpdatingImportantIds] = useState([]);
   useEffect(() => {
     let isMounted = true;
     async function loadTasks() {
@@ -24,7 +25,8 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
             title: task.title,
             time: task.createdAt ? new Date(task.createdAt).toLocaleDateString() : "Recently",
             category: task.category?.name ?? "Uncategorized",
-            completed: task.completed
+            completed: task.completed,
+            important: task.important
           }))
         );
       } catch (error) {
@@ -59,6 +61,23 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
       setUpdatingTaskIds((ids) => ids.filter((id) => id !== task.id));
     }
   };
+  const handleToggleImportant = async (task) => {
+    const nextImportant = !task.important;
+    setUpdatingImportantIds((ids) => [...ids, task.id]);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await updateTaskImportant(task.id, nextImportant);
+      setRecentManualTasks((tasks) => tasks.map((entry) => entry.id === task.id ? {
+        ...entry,
+        important: updatedTask.important
+      } : entry));
+      onDataChange?.();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update task importance.");
+    } finally {
+      setUpdatingImportantIds((ids) => ids.filter((id) => id !== task.id));
+    }
+  };
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
       /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Recent Manual Tasks" }),
@@ -78,6 +97,7 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
       isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: "Loading tasks..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-error", children: errorMessage }) : recentManualTasks.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: "No tasks yet." }) : null,
       recentManualTasks.map((task) => {
         const isUpdating = updatingTaskIds.includes(task.id);
+        const isUpdatingImportant = updatingImportantIds.includes(task.id);
         return /* @__PURE__ */ jsxs(
         "div",
         {
@@ -92,6 +112,21 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
                 className: `flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${task.completed ? "bg-primary border-primary" : "border-outline-variant group-hover:border-primary"}`,
                 "aria-label": task.completed ? "Mark task as incomplete" : "Mark task as complete",
                 children: task.completed && /* @__PURE__ */ jsx(Check, { className: "w-3 h-3 text-on-primary" })
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  handleToggleImportant(task);
+                },
+                disabled: isUpdatingImportant,
+                className: `flex-shrink-0 w-5 h-5 flex items-center justify-center rounded transition-colors ${task.important ? "text-primary" : "text-on-surface-variant hover:text-primary"} disabled:cursor-not-allowed disabled:opacity-60`,
+                "aria-label": task.important ? "Remove from important" : "Mark as important",
+                children: /* @__PURE__ */ jsx(Star, { className: "w-4 h-4", style: { fill: task.important ? "currentColor" : "none" } })
               }
             ),
             /* @__PURE__ */ jsxs(Link, { to: `/tasks/${task.id}`, className: "flex-1 min-w-0", children: [

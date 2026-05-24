@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarDays, Check, Clock, Plus, Search } from "lucide-react";
+import { CalendarDays, Check, Clock, Plus, Search, Star } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { fetchTasksWithParams, updateTask } from "@/lib/api";
+import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
 function getLocalDateKey(value = new Date()) {
   if (typeof value === "string") {
@@ -75,7 +75,7 @@ function isInNextWeek(dueKey, todayKey) {
   return dueKey >= todayKey && dueKey <= weekEndKey;
 }
 
-function TaskCard({ task, isUpdating, onComplete }) {
+function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant }) {
   const navigate = useNavigate();
   const done = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
@@ -107,6 +107,22 @@ function TaskCard({ task, isUpdating, onComplete }) {
         {done ? <Check className="h-3 w-3 text-on-primary" /> : null}
       </button>
 
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onToggleImportant(task);
+        }}
+        disabled={isUpdatingImportant}
+        aria-label={task.important ? "Remove from important" : "Mark as important"}
+        className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded transition-colors ${
+          task.important ? "text-primary" : "text-on-surface-variant hover:text-primary"
+        } disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        <Star className="h-4 w-4" style={{ fill: task.important ? "currentColor" : "none" }} />
+      </button>
+
       <div className="min-w-0 flex-1">
         <h3 className={`font-semibold break-words ${done ? "text-outline line-through" : "text-on-surface"}`}>
           {task.title}
@@ -131,7 +147,7 @@ function TaskCard({ task, isUpdating, onComplete }) {
   );
 }
 
-function PlannedContent() {
+function PlannedContent({ onTasksChanged }) {
   const todayKey = useMemo(() => getLocalDateKey(), []);
   const tomorrowKey = useMemo(() => addDaysKey(1), []);
   const weekEndKey = useMemo(() => addDaysKey(7), []);
@@ -143,6 +159,7 @@ function PlannedContent() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [updatingTaskIds, setUpdatingTaskIds] = useState([]);
+  const [updatingImportantIds, setUpdatingImportantIds] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -228,6 +245,20 @@ function PlannedContent() {
       setErrorMessage(error instanceof Error ? error.message : "Unable to update task.");
     } finally {
       setUpdatingTaskIds((ids) => ids.filter((id) => id !== task.id));
+    }
+  };
+
+  const handleToggleImportant = async (task) => {
+    setUpdatingImportantIds((ids) => [...ids, task.id]);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await updateTaskImportant(task.id, !task.important);
+      setTasks((currentTasks) => currentTasks.map((entry) => entry.id === task.id ? updatedTask : entry));
+      onTasksChanged?.();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update task importance.");
+    } finally {
+      setUpdatingImportantIds((ids) => ids.filter((id) => id !== task.id));
     }
   };
 
@@ -356,7 +387,9 @@ function PlannedContent() {
                     key={task.id}
                     task={task}
                     isUpdating={updatingTaskIds.includes(task.id)}
+                    isUpdatingImportant={updatingImportantIds.includes(task.id)}
                     onComplete={handleCompleteTask}
+                    onToggleImportant={handleToggleImportant}
                   />
                 ))}
               </div>
@@ -377,7 +410,7 @@ function PlannedContent() {
 function PlannedPage() {
   return (
     <AppShell title="Planned">
-      <PlannedContent />
+      {({ refreshShell }) => <PlannedContent onTasksChanged={refreshShell} />}
     </AppShell>
   );
 }

@@ -8,7 +8,7 @@ function TaskDetailPage() {
   const navigate = useNavigate();
   const params = useParams();
 
-  return /* @__PURE__ */ jsx(AppShell, { title: "Task Details", children: /* @__PURE__ */ jsx(TaskDetail, { taskId: params.id, onBack: () => navigate("/tasks") }) });
+  return /* @__PURE__ */ jsx(AppShell, { title: "Task Details", children: ({ refreshShell }) => /* @__PURE__ */ jsx(TaskDetail, { taskId: params.id, onBack: () => navigate("/tasks"), onTaskUpdated: refreshShell }) });
 }
 
 export default TaskDetailPage;

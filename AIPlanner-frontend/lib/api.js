@@ -189,6 +189,12 @@ async function updateTask(id, input) {
     body: JSON.stringify(input)
   });
 }
+async function updateTaskImportant(id, important) {
+  const searchParams = new URLSearchParams({ important: String(important) });
+  return requestJson(`/api/tasks/${id}/important?${searchParams.toString()}`, {
+    method: "PATCH"
+  });
+}
 async function fetchGoals() {
   return requestJson("/api/goals");
 }
@@ -227,6 +233,11 @@ async function createGoal(input) {
     body: JSON.stringify(input)
   });
 }
+async function deleteGoal(id) {
+  return requestJson(`/api/goals/${id}`, {
+    method: "DELETE"
+  });
+}
 async function fetchPlanByGoalId(goalId) {
   try {
     return await requestJson(`/api/goals/${goalId}/plans`);
@@ -259,6 +270,7 @@ export {
   createTask,
   completePlanTask,
   deleteCategory,
+  deleteGoal,
   fetchCategories,
   fetchGoalById,
   fetchGoals,
@@ -275,5 +287,6 @@ export {
   register,
   storeAuth,
   updateCategory,
+  updateTaskImportant,
   updateTask
 };

@@ -1,25 +1,167 @@
 "use client";
-import { jsx, jsxs } from "react/jsx-runtime";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { CalendarDays, CheckCircle2, Clock, Plus, Search, Target } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { fetchGoals } from "@/lib/api";
+import { fetchGoals, fetchPlanByGoalId } from "@/lib/api";
+
+function formatDate(value) {
+  if (!value) return "No deadline";
+  return new Date(`${value}T12:00:00`).toLocaleDateString(void 0, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function getPlanStats(plan) {
+  const tasks = (plan?.days ?? []).flatMap((day) => day.tasks ?? []);
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((task) => Boolean(task.completed)).length;
+  const progress = totalTasks > 0 ? Math.round(completedTasks / totalTasks * 100) : null;
+  return { totalTasks, completedTasks, progress };
+}
+
+function getGoalProgress(goal) {
+  if (goal.progress !== undefined && goal.progress !== null) return Number(goal.progress);
+  if (goal.planStats.progress !== null) return goal.planStats.progress;
+  if (goal.status === "COMPLETED") return 100;
+  if (goal.status === "ACTIVE") return 0;
+  return null;
+}
+
+function getStatusLabel(goal) {
+  if (goal.status === "COMPLETED") return "Completed";
+  const progress = getGoalProgress(goal);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  if (goal.endDate && goal.endDate < todayKey && goal.status !== "COMPLETED") return "Behind";
+  if (progress === 0) return "Not Started";
+  return goal.status === "ACTIVE" ? "On Track" : goal.status ?? "Active";
+}
+
+function statusClass(label) {
+  if (label === "Completed") return "bg-green-100/70 text-green-700";
+  if (label === "Behind") return "bg-error-container/40 text-error";
+  if (label === "Not Started") return "bg-surface-container text-on-surface-variant";
+  return "bg-secondary-container text-on-secondary-container";
+}
+
+function GoalCard({ goal }) {
+  const navigate = useNavigate();
+  const progress = getGoalProgress(goal);
+  const status = getStatusLabel(goal);
+  const progressLabel = progress === null ? "-" : `${progress}%`;
+
+  return (
+    <article
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(`/goals/${goal.id}`)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") navigate(`/goals/${goal.id}`);
+      }}
+      className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-on-surface break-words">{goal.title}</h3>
+          {goal.description ? (
+            <p className="mt-1 text-sm text-on-surface-variant line-clamp-2">{goal.description}</p>
+          ) : null}
+        </div>
+        <span className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${statusClass(status)}`}>{status}</span>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
+        <span className="inline-flex items-center gap-1">
+          <CalendarDays className="h-3.5 w-3.5" />
+          {formatDate(goal.endDate)}
+        </span>
+        {goal.dailyAvailableMinutes ? (
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {goal.dailyAvailableMinutes} min/day
+          </span>
+        ) : null}
+        {goal.planStats.totalTasks > 0 ? (
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {goal.planStats.completedTasks}/{goal.planStats.totalTasks} plan tasks
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-container">
+          <div className="h-full bg-primary transition-all" style={{ width: `${progress ?? 0}%` }} />
+        </div>
+        <span className="w-10 shrink-0 text-right text-xs font-semibold text-on-surface-variant tabular-nums">
+          {progressLabel}
+        </span>
+      </div>
+
+      <Link
+        to={`/goals/${goal.id}`}
+        onClick={(event) => event.stopPropagation()}
+        className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+      >
+        View details
+      </Link>
+    </article>
+  );
+}
 
 function GoalsContent() {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("newest");
+
+  const loadGoals = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const goalList = await fetchGoals();
+      const goalsWithPlans = await Promise.all(
+        goalList.map(async (goal) => {
+          const plan = await fetchPlanByGoalId(goal.id);
+          return {
+            ...goal,
+            plan,
+            planStats: getPlanStats(plan)
+          };
+        })
+      );
+      setGoals(goalsWithPlans);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to load goals.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
-    async function loadGoals() {
+    async function load() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const data = await fetchGoals();
+        const goalList = await fetchGoals();
+        const goalsWithPlans = await Promise.all(
+          goalList.map(async (goal) => {
+            const plan = await fetchPlanByGoalId(goal.id);
+            return {
+              ...goal,
+              plan,
+              planStats: getPlanStats(plan)
+            };
+          })
+        );
         if (!isMounted) return;
-        setGoals(data);
+        setGoals(goalsWithPlans);
       } catch (error) {
         if (!isMounted) return;
         setErrorMessage(error instanceof Error ? error.message : "Unable to load goals.");
@@ -27,36 +169,185 @@ function GoalsContent() {
         if (isMounted) setIsLoading(false);
       }
     }
-    loadGoals();
+    load();
     return () => {
       isMounted = false;
     };
   }, []);
 
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: "Goals" }),
-      /* @__PURE__ */ jsxs(Link, { to: "/goals/new", className: "flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm", children: [
-        /* @__PURE__ */ jsx(Plus, { className: "w-4 h-4" }),
-        "New Goal"
-      ] })
-    ] }),
-    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading goals..." }) : null,
-    errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : null,
-    !isLoading && !errorMessage && goals.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No goals yet." }) : null,
-    /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3", children: goals.map((goal) => /* @__PURE__ */ jsxs(Link, { to: `/goals/${goal.id}`, className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant hover:border-primary/30 transition-all", children: [
-      /* @__PURE__ */ jsx("h3", { className: "font-semibold text-on-surface", children: goal.title }),
-      goal.description ? /* @__PURE__ */ jsx("p", { className: "text-sm text-on-surface-variant mt-1 line-clamp-2", children: goal.description }) : null,
-      /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-2 mt-3 text-xs text-on-surface-variant", children: [
-        /* @__PURE__ */ jsx("span", { className: "px-2 py-1 bg-surface-container rounded", children: goal.status ?? "ACTIVE" }),
-        /* @__PURE__ */ jsx("span", { className: "px-2 py-1 bg-surface-container rounded", children: goal.endDate ? `Ends ${new Date(goal.endDate).toLocaleDateString()}` : "No end date" })
-      ] })
-    ] }, goal.id)) })
-  ] });
+  const summary = useMemo(() => {
+    const completed = goals.filter((goal) => goal.status === "COMPLETED").length;
+    const progressValues = goals.map(getGoalProgress).filter((value) => value !== null);
+    return {
+      total: goals.length,
+      active: goals.length - completed,
+      completed,
+      averageProgress: progressValues.length
+        ? `${Math.round(progressValues.reduce((sum, value) => sum + value, 0) / progressValues.length)}%`
+        : "-"
+    };
+  }, [goals]);
+
+  const filteredGoals = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return goals
+      .filter((goal) => {
+        const text = `${goal.title ?? ""} ${goal.description ?? ""}`.toLowerCase();
+        const matchesSearch = !normalizedSearch || text.includes(normalizedSearch);
+        const matchesStatus = statusFilter === "all"
+          || (statusFilter === "active" && goal.status !== "COMPLETED")
+          || (statusFilter === "completed" && goal.status === "COMPLETED");
+        return matchesSearch && matchesStatus;
+      })
+      .sort((first, second) => {
+        if (sortOption === "oldest") {
+          return new Date(first.createdAt ?? 0).getTime() - new Date(second.createdAt ?? 0).getTime();
+        }
+        if (sortOption === "deadline") {
+          const firstDate = first.endDate ? new Date(first.endDate).getTime() : Number.MAX_SAFE_INTEGER;
+          const secondDate = second.endDate ? new Date(second.endDate).getTime() : Number.MAX_SAFE_INTEGER;
+          return firstDate - secondDate;
+        }
+        if (sortOption === "progress") {
+          return (getGoalProgress(second) ?? -1) - (getGoalProgress(first) ?? -1);
+        }
+        return new Date(second.createdAt ?? 0).getTime() - new Date(first.createdAt ?? 0).getTime();
+      });
+  }, [goals, searchTerm, sortOption, statusFilter]);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setSortOption("newest");
+  };
+
+  const summaryCards = [
+    { label: "Total Goals", value: summary.total },
+    { label: "Active Goals", value: summary.active },
+    { label: "Completed Goals", value: summary.completed },
+    { label: "Average Progress", value: summary.averageProgress }
+  ];
+  const hasFilters = searchTerm.trim() || statusFilter !== "all" || sortOption !== "newest";
+  const isEmpty = !isLoading && !errorMessage && goals.length === 0;
+  const noFilteredResults = !isLoading && !errorMessage && goals.length > 0 && filteredGoals.length === 0;
+
+  return (
+    <section className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-serif font-semibold text-on-surface">Goals</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">Track your objectives and AI-generated plans</p>
+        </div>
+        <Link
+          to="/goals/new"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-all active:scale-95"
+        >
+          <Plus className="h-4 w-4" />
+          New Goal
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {summaryCards.map((card) => (
+          <div key={card.label} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+            <p className="text-xs font-medium text-on-surface-variant">{card.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-on-surface">{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 lg:grid-cols-[1fr_auto_auto]">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search goals"
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+          />
+        </label>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select
+          value={sortOption}
+          onChange={(event) => setSortOption(event.target.value)}
+          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="deadline">Deadline</option>
+          <option value="progress">Progress</option>
+        </select>
+      </div>
+
+      {isLoading ? (
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-sm text-on-surface-variant">
+          Loading goals...
+        </div>
+      ) : null}
+
+      {errorMessage ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-sm text-error">
+          <span>{errorMessage}</span>
+          <button type="button" onClick={loadGoals} className="text-xs font-semibold text-on-surface hover:underline">
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {isEmpty ? (
+        <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
+          <Target className="h-6 w-6 text-primary" />
+          <h3 className="mt-3 text-lg font-semibold text-on-surface">No goals yet</h3>
+          <p className="mt-2 text-sm text-on-surface-variant">Create a goal and let AI generate a plan for you.</p>
+          <Link
+            to="/goals/new"
+            className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+          >
+            Create Goal
+          </Link>
+        </div>
+      ) : null}
+
+      {noFilteredResults ? (
+        <div className="flex flex-col gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-sm text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
+          <span>No goals match your filters.</span>
+          <button type="button" onClick={clearFilters} className="self-start rounded-lg bg-surface-container px-3 py-2 text-xs font-semibold text-on-surface sm:self-auto">
+            Clear filters
+          </button>
+        </div>
+      ) : null}
+
+      {!isLoading && !errorMessage && filteredGoals.length > 0 ? (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          {filteredGoals.map((goal) => (
+            <GoalCard key={goal.id} goal={goal} />
+          ))}
+        </div>
+      ) : null}
+
+      {hasFilters && !isLoading && !errorMessage && filteredGoals.length > 0 ? (
+        <p className="text-xs text-on-surface-variant">
+          Showing {filteredGoals.length} of {goals.length} goals.
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 function GoalsPage() {
-  return /* @__PURE__ */ jsx(AppShell, { title: "Goals", children: /* @__PURE__ */ jsx(GoalsContent, {}) });
+  return (
+    <AppShell title="Goals">
+      <GoalsContent />
+    </AppShell>
+  );
 }
 
 export default GoalsPage;

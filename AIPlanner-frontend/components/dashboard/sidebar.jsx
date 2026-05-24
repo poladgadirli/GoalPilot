@@ -9,10 +9,11 @@ import {
   CheckSquare,
   ChevronRight,
   Settings,
-  Search
+  Search,
+  Target
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { fetchCategories, fetchTasks, getStoredUser, logout } from "@/lib/api";
+import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser, logout } from "@/lib/api";
 const fallbackCategoryColor = "#64748B";
 function getCategoryColor(color) {
   if (typeof color !== "string") return fallbackCategoryColor;
@@ -25,6 +26,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [mainItems, setMainItems] = useState([
     { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
+    { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), label: "Goals", count: 0, path: "/goals" },
     { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: 0, path: "/my-day" },
     { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: 0, path: "/important" },
     { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: 0, path: "/planned" },
@@ -36,16 +38,22 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
     let isMounted = true;
     async function loadSidebarData() {
       try {
-        const [tasksPage, categoryList] = await Promise.all([fetchTasks(50), fetchCategories()]);
+        const [tasksPage, importantTasksPage, goalList, categoryList] = await Promise.all([
+          fetchTasks(200),
+          fetchTasksWithParams({ size: 1, important: true }),
+          fetchGoals(),
+          fetchCategories()
+        ]);
         if (!isMounted) return;
         const tasks = tasksPage.content ?? [];
         const openTasks = tasks.filter((task) => !task.completed);
-        const importantTasks = tasks.filter((task) => task.priority === "HIGH");
+        const importantCount = importantTasksPage.totalElements ?? (importantTasksPage.content ?? []).length;
         const plannedTasks = tasks.filter((task) => Boolean(task.dueDate));
         setMainItems([
           { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
+          { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), label: "Goals", count: goalList.length, path: "/goals" },
           { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: openTasks.length, path: "/my-day" },
-          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantTasks.length, path: "/important" },
+          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantCount, path: "/important" },
           { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: plannedTasks.length, path: "/planned" },
           { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: tasks.length, path: "/tasks" }
         ]);

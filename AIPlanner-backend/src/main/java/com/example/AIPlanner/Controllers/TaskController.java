@@ -31,6 +31,7 @@ public class TaskController {
             "priority",
             "status",
             "completed",
+            "important",
             "estimatedMinutes"
     );
 
@@ -87,6 +88,16 @@ public class TaskController {
         TaskResponse task = taskService.update(id, request);
 
         return ApiResponse.success("Task updated successfully", task);
+    }
+
+    @PatchMapping("/{id}/important")
+    public ApiResponse<TaskResponse> updateImportant(
+            @PathVariable Long id,
+            @RequestParam boolean important
+    ) {
+        TaskResponse task = taskService.updateImportant(id, important);
+
+        return ApiResponse.success("Task importance updated successfully", task);
     }
 
     @GetMapping("/category/{categoryId}")

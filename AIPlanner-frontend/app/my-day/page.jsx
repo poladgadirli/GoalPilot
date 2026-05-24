@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertTriangle, CalendarDays, Check, Clock, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, Clock, Plus, Sparkles, Star } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { completePlanTask, fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, updateTask } from "@/lib/api";
+import { completePlanTask, fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
 function getLocalDateKey(value = new Date()) {
   if (typeof value === "string") {
@@ -76,7 +76,7 @@ function CheckboxButton({ checked, disabled, isUpdating, onClick, label }) {
   );
 }
 
-function ManualTaskRow({ task, isUpdating, onComplete }) {
+function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant }) {
   const navigate = useNavigate();
   const completed = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
@@ -103,6 +103,21 @@ function ManualTaskRow({ task, isUpdating, onComplete }) {
           if (!completed) onComplete(task);
         }}
       />
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onToggleImportant(task);
+        }}
+        disabled={isUpdatingImportant}
+        aria-label={task.important ? "Remove from important" : "Mark as important"}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors ${
+          task.important ? "text-primary" : "text-on-surface-variant hover:text-primary"
+        } disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        <Star className="h-4 w-4" style={{ fill: task.important ? "currentColor" : "none" }} />
+      </button>
       <div className="min-w-0 flex-1">
         <h3 className={`font-semibold break-words ${completed ? "text-outline line-through" : "text-on-surface"}`}>
           {task.title}
@@ -159,13 +174,14 @@ function PlanTaskRow({ task, isUpdating, onComplete }) {
   );
 }
 
-function MyDayContent() {
+function MyDayContent({ onTasksChanged }) {
   const todayKey = useMemo(() => getLocalDateKey(), []);
   const [manualTasks, setManualTasks] = useState([]);
   const [planTasks, setPlanTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [updatingManualIds, setUpdatingManualIds] = useState([]);
+  const [updatingImportantIds, setUpdatingImportantIds] = useState([]);
   const [updatingPlanIds, setUpdatingPlanIds] = useState([]);
 
   const loadDay = async () => {
@@ -261,6 +277,20 @@ function MyDayContent() {
       setErrorMessage(error instanceof Error ? error.message : "Unable to complete task.");
     } finally {
       setUpdatingManualIds((ids) => ids.filter((id) => id !== task.id));
+    }
+  };
+
+  const handleToggleImportant = async (task) => {
+    setUpdatingImportantIds((ids) => [...ids, task.id]);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await updateTaskImportant(task.id, !task.important);
+      setManualTasks((tasks) => tasks.map((entry) => entry.id === task.id ? updatedTask : entry));
+      onTasksChanged?.();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update task importance.");
+    } finally {
+      setUpdatingImportantIds((ids) => ids.filter((id) => id !== task.id));
     }
   };
 
@@ -360,7 +390,9 @@ function MyDayContent() {
                       key={task.id}
                       task={task}
                       isUpdating={updatingManualIds.includes(task.id)}
+                      isUpdatingImportant={updatingImportantIds.includes(task.id)}
                       onComplete={handleCompleteManualTask}
+                      onToggleImportant={handleToggleImportant}
                     />
                   ))}
                 </div>
@@ -420,7 +452,7 @@ function MyDayContent() {
 function MyDayPage() {
   return (
     <AppShell title="My Day">
-      <MyDayContent />
+      {({ refreshShell }) => <MyDayContent onTasksChanged={refreshShell} />}
     </AppShell>
   );
 }

@@ -55,6 +55,10 @@ public class TaskMapper {
                 task.setStatus(request.getCompleted() ? TaskStatus.DONE : TaskStatus.TODO);
             }
         }
+
+        if (request.getImportant() != null) {
+            task.setImportant(request.getImportant());
+        }
     }
 
     public TaskResponse toResponse(Task task) {
@@ -63,6 +67,7 @@ public class TaskMapper {
                 task.getTitle(),
                 task.getDescription(),
                 task.isCompleted(),
+                task.isImportant(),
                 task.getCreatedAt(),
                 task.getDueDate(),
                 task.getPriority(),

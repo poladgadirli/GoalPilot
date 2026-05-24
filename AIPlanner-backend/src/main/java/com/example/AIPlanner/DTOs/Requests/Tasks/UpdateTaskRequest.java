@@ -28,6 +28,8 @@ public class UpdateTaskRequest {
 
     private Boolean completed;
 
+    private Boolean important;
+
     public String getTitle() {
         return title;
     }
@@ -82,5 +84,13 @@ public class UpdateTaskRequest {
 
     public void setCompleted(Boolean completed) {
         this.completed = completed;
+    }
+
+    public Boolean getImportant() {
+        return important;
+    }
+
+    public void setImportant(Boolean important) {
+        this.important = important;
     }
 }

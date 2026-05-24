@@ -119,6 +119,20 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public TaskResponse updateImportant(Long id, boolean important) {
+        User currentUser = currentUserService.getCurrentUser();
+
+        Task task = taskRepository.findByIdAndUser(id, currentUser)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+        task.setImportant(important);
+
+        Task updatedTask = taskRepository.save(task);
+
+        return taskMapper.toResponse(updatedTask);
+    }
+
+    @Override
     public void delete(Long id) {
         User currentUser = currentUserService.getCurrentUser();
 

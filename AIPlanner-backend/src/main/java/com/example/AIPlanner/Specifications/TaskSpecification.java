@@ -38,6 +38,13 @@ import org.springframework.data.jpa.domain.Specification;
                 );
             }
 
+            if (filter.getImportant() != null) {
+                predicate = criteriaBuilder.and(
+                        predicate,
+                        criteriaBuilder.equal(root.get("important"), filter.getImportant())
+                );
+            }
+
             if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
                 String keyword = "%" + filter.getKeyword().toLowerCase().trim() + "%";
 

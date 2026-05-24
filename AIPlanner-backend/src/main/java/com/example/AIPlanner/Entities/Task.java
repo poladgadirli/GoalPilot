@@ -36,6 +36,9 @@ public class Task extends BaseEntity<Long> {
 
     private boolean completed = false;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean important = false;
+
     private LocalDateTime dueDate;
 
     private Integer estimatedMinutes;
@@ -97,6 +100,14 @@ public class Task extends BaseEntity<Long> {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public boolean isImportant() {
+        return important;
+    }
+
+    public void setImportant(boolean important) {
+        this.important = important;
     }
 
     public LocalDateTime getDueDate() {

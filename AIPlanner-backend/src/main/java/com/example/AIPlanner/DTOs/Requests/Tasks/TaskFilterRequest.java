@@ -9,6 +9,7 @@ public class TaskFilterRequest {
     private TaskStatus status;
     private TaskPriority priority;
     private Boolean completed;
+    private Boolean important;
     private String keyword;
 
     public Long getCategoryId() {
@@ -41,6 +42,14 @@ public class TaskFilterRequest {
 
     public void setCompleted(Boolean completed) {
         this.completed = completed;
+    }
+
+    public Boolean getImportant() {
+        return important;
+    }
+
+    public void setImportant(Boolean important) {
+        this.important = important;
     }
 
     public String getKeyword() {

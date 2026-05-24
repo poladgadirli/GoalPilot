@@ -2,8 +2,8 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Check, Clock, Sparkles } from "lucide-react";
-import { fetchTaskById, updateTask } from "@/lib/api";
+import { ArrowLeft, Calendar, Check, Clock, Sparkles, Star } from "lucide-react";
+import { fetchTaskById, updateTask, updateTaskImportant } from "@/lib/api";
 
 function formatDate(value) {
   if (!value) return "No due date";
@@ -16,6 +16,7 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
   const [task, setTask] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdatingImportant, setIsUpdatingImportant] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
@@ -63,6 +64,20 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
       setIsUpdating(false);
     }
   };
+  const handleToggleImportant = async () => {
+    if (!task) return;
+    setIsUpdatingImportant(true);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await updateTaskImportant(task.id, !task.important);
+      setTask(updatedTask);
+      onTaskUpdated?.();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update task importance.");
+    } finally {
+      setIsUpdatingImportant(false);
+    }
+  };
 
   return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 mb-4", children: [
@@ -91,6 +106,17 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
                   className: `w-8 h-8 rounded-md border-2 flex items-center justify-center transition-colors ${task.completed ? "bg-primary border-primary" : "border-outline-variant hover:border-primary"}`,
                   "aria-label": task.completed ? "Mark task as incomplete" : "Mark task as complete",
                   children: task.completed && /* @__PURE__ */ jsx(Check, { className: "w-5 h-5 text-on-primary" })
+                }
+              ),
+              /* @__PURE__ */ jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleToggleImportant,
+                  disabled: isUpdatingImportant,
+                  className: `w-8 h-8 rounded-md flex items-center justify-center transition-colors ${task.important ? "text-primary" : "text-on-surface-variant hover:text-primary"} disabled:cursor-not-allowed disabled:opacity-60`,
+                  "aria-label": task.important ? "Remove from important" : "Mark as important",
+                  children: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5", style: { fill: task.important ? "currentColor" : "none" } })
                 }
               ),
               /* @__PURE__ */ jsx("span", { className: "text-base font-semibold", children: task.completed ? "Completed" : "Mark as completed" })

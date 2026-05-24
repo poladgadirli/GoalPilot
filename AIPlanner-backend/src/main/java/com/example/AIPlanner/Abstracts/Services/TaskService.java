@@ -21,5 +21,7 @@ public interface TaskService {
 
     TaskResponse update(Long id, UpdateTaskRequest request);
 
+    TaskResponse updateImportant(Long id, boolean important);
+
     void delete(Long id);
 }
