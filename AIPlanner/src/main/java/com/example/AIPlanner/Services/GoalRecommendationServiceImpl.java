@@ -1,15 +1,34 @@
 package com.example.AIPlanner.Services;
 
+import com.example.AIPlanner.Abstracts.Services.CurrentUserService;
 import com.example.AIPlanner.Abstracts.Services.GoalRecommendationService;
 import com.example.AIPlanner.DTOs.Requests.Goals.GoalRecommendationRequest;
 import com.example.AIPlanner.DTOs.Responses.Goals.GoalRecommendationResponse;
+import com.example.AIPlanner.Entities.GoalRecommendation;
+import com.example.AIPlanner.Entities.User;
+import com.example.AIPlanner.Repositories.GoalRecommendationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GoalRecommendationServiceImpl implements GoalRecommendationService {
 
+    private final GoalRecommendationRepository goalRecommendationRepository;
+    private final CurrentUserService currentUserService;
+
+    public GoalRecommendationServiceImpl(
+            GoalRecommendationRepository goalRecommendationRepository,
+            CurrentUserService currentUserService
+    ) {
+        this.goalRecommendationRepository = goalRecommendationRepository;
+        this.currentUserService = currentUserService;
+    }
+
     @Override
+    @Transactional
     public GoalRecommendationResponse generateRecommendation(GoalRecommendationRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+
         String title = request.getTitle().trim();
         String description = request.getDescription() == null
                 ? ""
@@ -22,11 +41,24 @@ public class GoalRecommendationServiceImpl implements GoalRecommendationService 
 
         String reason = buildReason(title, minimumRecommendedDays);
 
-        return new GoalRecommendationResponse(
+        GoalRecommendation recommendation = new GoalRecommendation(
                 title,
+                description,
                 minimumRecommendedDays,
                 minimumRecommendedMinutes,
-                reason
+                reason,
+                currentUser
+        );
+
+        GoalRecommendation savedRecommendation =
+                goalRecommendationRepository.save(recommendation);
+
+        return new GoalRecommendationResponse(
+                savedRecommendation.getId(),
+                savedRecommendation.getGoalTitle(),
+                savedRecommendation.getMinimumRecommendedDays(),
+                savedRecommendation.getMinimumRecommendedMinutes(),
+                savedRecommendation.getReason()
         );
     }
 
