@@ -8,33 +8,48 @@ import com.example.AIPlanner.DTOs.Requests.Auth.RefreshTokenRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RegisterRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.AuthResponse;
 import com.example.AIPlanner.DTOs.Responses.Auth.UserResponse;
+import com.example.AIPlanner.Entities.Category;
 import com.example.AIPlanner.Entities.RefreshToken;
 import com.example.AIPlanner.Entities.User;
+import com.example.AIPlanner.Repositories.CategoryRepository;
 import com.example.AIPlanner.Repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    private static final String[][] DEFAULT_CATEGORIES = {
+            {"Work", "#2563EB"},
+            {"Study", "#7C3AED"},
+            {"Personal", "#16A34A"},
+            {"Health", "#DC2626"},
+            {"Other", "#64748B"}
+    };
+
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
+            CategoryRepository categoryRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             RefreshTokenService refreshTokenService
     ) {
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
     }
 
     @Override
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         String name = request.getName().trim();
         String username = request.getUsername().trim();
@@ -57,6 +72,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         User savedUser = userRepository.save(user);
+        createDefaultCategories(savedUser);
 
         String accessToken = jwtService.generateAccessToken(savedUser);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
@@ -122,5 +138,22 @@ public class AuthServiceImpl implements AuthService {
                 user.getUsername(),
                 user.getEmail()
         );
+    }
+
+    private void createDefaultCategories(User user) {
+        for (String[] defaultCategory : DEFAULT_CATEGORIES) {
+            String name = defaultCategory[0];
+
+            if (categoryRepository.existsByNameIgnoreCaseAndUser(name, user)) {
+                continue;
+            }
+
+            Category category = new Category();
+            category.setUser(user);
+            category.setName(name);
+            category.setColor(defaultCategory[1]);
+
+            categoryRepository.save(category);
+        }
     }
 }
