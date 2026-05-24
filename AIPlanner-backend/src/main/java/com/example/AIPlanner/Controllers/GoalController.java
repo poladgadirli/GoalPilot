@@ -1,4 +1,4 @@
-package com.example.AIPlanner.Controller;
+package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.GoalService;
 import com.example.AIPlanner.DTOs.Requests.Goals.CreateGoalRequest;

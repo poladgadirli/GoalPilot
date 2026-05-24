@@ -1,4 +1,4 @@
-package com.example.AIPlanner.Controller;
+package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.PlanTaskService;
 import com.example.AIPlanner.DTOs.Responses.Plans.PlanTaskResponse;

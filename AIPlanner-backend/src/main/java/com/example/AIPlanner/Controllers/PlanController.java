@@ -1,4 +1,4 @@
-package com.example.AIPlanner.Controller;
+package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.ManualPlanGenerationService;
 import com.example.AIPlanner.Abstracts.Services.PlanService;
