@@ -137,9 +137,7 @@ public class GoalServiceImpl implements GoalService {
                 ? request.getDurationDays()
                 : goal.getDurationDays();
 
-        Integer finalMinimumRecommendedDays = request.getMinimumRecommendedDays() != null
-                ? request.getMinimumRecommendedDays()
-                : goal.getMinimumRecommendedDays();
+        Integer finalMinimumRecommendedDays = goal.getMinimumRecommendedDays();
 
         if (finalDurationDays < finalMinimumRecommendedDays) {
             throw new IllegalArgumentException("Duration days cannot be less than minimum recommended days");
