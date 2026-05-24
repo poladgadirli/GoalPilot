@@ -10,7 +10,8 @@ import com.example.AIPlanner.Entities.User;
 import com.example.AIPlanner.Mappers.GoalMapper;
 import com.example.AIPlanner.Repositories.GoalRepository;
 import org.springframework.stereotype.Service;
-
+import com.example.AIPlanner.Entities.GoalRecommendation;
+import com.example.AIPlanner.Repositories.GoalRecommendationRepository;
 import java.util.List;
 
 @Service
@@ -19,15 +20,17 @@ public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
     private final GoalMapper goalMapper;
     private final CurrentUserService currentUserService;
+    private final GoalRecommendationRepository goalRecommendationRepository;
 
     public GoalServiceImpl(
             GoalRepository goalRepository,
             GoalMapper goalMapper,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService, GoalRecommendationRepository goalRecommendationRepository
     ) {
         this.goalRepository = goalRepository;
         this.goalMapper = goalMapper;
         this.currentUserService = currentUserService;
+        this.goalRecommendationRepository = goalRecommendationRepository;
     }
 
     @Override
@@ -53,12 +56,20 @@ public class GoalServiceImpl implements GoalService {
     @Override
     public GoalResponse createGoal(CreateGoalRequest request) {
         User currentUser = currentUserService.getCurrentUser();
+        Long userId = currentUser.getId();
 
-        validateCreateRequest(request, currentUser.getId());
+        GoalRecommendation recommendation = goalRecommendationRepository
+                .findByIdAndUserId(request.getRecommendationId(), userId)
+                .orElseThrow(() -> new IllegalArgumentException("Goal recommendation not found"));
 
-        Goal goal = goalMapper.toEntity(request, currentUser);
+        validateCreateRequest(request, recommendation, userId);
+
+        Goal goal = goalMapper.toEntity(request, recommendation, currentUser);
 
         Goal savedGoal = goalRepository.save(goal);
+
+        recommendation.setUsed(true);
+        goalRecommendationRepository.save(recommendation);
 
         return goalMapper.toResponse(savedGoal);
     }
@@ -89,12 +100,20 @@ public class GoalServiceImpl implements GoalService {
         goalRepository.delete(goal);
     }
 
-    private void validateCreateRequest(CreateGoalRequest request, Long userId) {
-        if (request.getDurationDays() < request.getMinimumRecommendedDays()) {
+    private void validateCreateRequest(
+            CreateGoalRequest request,
+            GoalRecommendation recommendation,
+            Long userId
+    ) {
+        if (Boolean.TRUE.equals(recommendation.getUsed())) {
+            throw new IllegalArgumentException("Goal recommendation has already been used");
+        }
+
+        if (request.getDurationDays() < recommendation.getMinimumRecommendedDays()) {
             throw new IllegalArgumentException("Duration days cannot be less than minimum recommended days");
         }
 
-        if (goalRepository.existsByTitleIgnoreCaseAndUserId(request.getTitle().trim(), userId)) {
+        if (goalRepository.existsByTitleIgnoreCaseAndUserId(recommendation.getGoalTitle().trim(), userId)) {
             throw new IllegalArgumentException("Goal with this title already exists");
         }
     }
