@@ -24,12 +24,6 @@ public class UpdateGoalRequest {
     @Min(value = 15, message = "Daily available minutes must be at least 15")
     private Integer dailyAvailableMinutes;
 
-    @Min(value = 1, message = "Minimum recommended days must be at least 1")
-    private Integer minimumRecommendedDays;
-
-    @Min(value = 1, message = "Minimum recommended minutes must be at least 1")
-    private Integer minimumRecommendedMinutes;
-
     private GoalStatus status;
 
     public UpdateGoalRequest() {
@@ -55,13 +49,6 @@ public class UpdateGoalRequest {
         return dailyAvailableMinutes;
     }
 
-    public Integer getMinimumRecommendedDays() {
-        return minimumRecommendedDays;
-    }
-
-    public Integer getMinimumRecommendedMinutes() {
-        return minimumRecommendedMinutes;
-    }
 
     public GoalStatus getStatus() {
         return status;
