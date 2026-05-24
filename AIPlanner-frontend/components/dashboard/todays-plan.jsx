@@ -3,6 +3,18 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Check, Lightbulb } from "lucide-react";
 import { completePlanTask, fetchGoals, fetchPlanByGoalId } from "@/lib/api";
+function getLocalDateKey(value = /* @__PURE__ */ new Date()) {
+  if (typeof value === "string") {
+    const dateOnly = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    if (dateOnly) return dateOnly;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 function mapPlanToView(plan, progress, todayTasks) {
   return {
     id: plan.id.toString(),
@@ -25,13 +37,14 @@ function TodaysPlan({ refreshKey = 0 }) {
       setErrorMessage(null);
       try {
         const goals = await fetchGoals();
+        const today = getLocalDateKey();
         const planResults = await Promise.all(
           goals.map(async (goal) => {
             const plan = await fetchPlanByGoalId(goal.id);
             if (!plan || plan.generationType !== "AI") return null;
-            const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-            const todayDay = plan.days?.find((day) => day.date === today);
+            const todayDay = plan.days?.find((day) => getLocalDateKey(day.date) === today);
             const dayTasks = todayDay?.tasks ?? [];
+            if (dayTasks.length === 0) return null;
             const completed = dayTasks.filter((task) => task.completed).length;
             const progress = dayTasks.length > 0 ? completed / dayTasks.length * 100 : 0;
             return mapPlanToView(plan, progress, dayTasks);
@@ -78,7 +91,7 @@ function TodaysPlan({ refreshKey = 0 }) {
       /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Today's AI Plan" })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
-      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading plans..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : aiPlans.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No AI plans yet. Create a goal and generate an AI plan." }) : null,
+      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading plans..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : aiPlans.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No AI plan tasks scheduled for today." }) : null,
       aiPlans.map((plan) => /* @__PURE__ */ jsxs(
         "div",
         {
