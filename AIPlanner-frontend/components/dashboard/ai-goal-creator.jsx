@@ -1,14 +1,16 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sparkles, Plus } from "lucide-react";
 import {
   createGoal,
   createGoalRecommendation,
   generateAiPlan
 } from "@/lib/api";
-function AiGoalCreator({ onGoalCreated }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [goalTitle, setGoalTitle] = useState("");
   const [goalDescription, setGoalDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +65,7 @@ function AiGoalCreator({ onGoalCreated }) {
     !isExpanded ? /* @__PURE__ */ jsxs(
       "button",
       {
-        onClick: () => setIsExpanded(true),
+        onClick: () => createPath ? navigate(createPath) : setIsExpanded(true),
         className: "w-full bg-gradient-to-r from-primary-fixed-dim/20 to-primary/10 hover:from-primary-fixed-dim/30 hover:to-primary/20 border border-primary/20 p-4 rounded-xl transition-all flex items-center gap-3 text-left",
         children: [
           /* @__PURE__ */ jsx(Plus, { className: "w-5 h-5 text-primary flex-shrink-0" }),

@@ -10,17 +10,17 @@ import {
   Settings,
   Search
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { fetchCategories, fetchTasks, getStoredUser, logout } from "@/lib/api";
 function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   const navigate = useNavigate();
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [mainItems, setMainItems] = useState([
-    { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: 0, active: true },
-    { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: 0 },
-    { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: 0 },
-    { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: 0 }
+    { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: 0, path: "/my-day" },
+    { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: 0, path: "/important" },
+    { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: 0, path: "/planned" },
+    { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: 0, path: "/tasks" }
   ]);
   const [categories, setCategories] = useState([]);
   const user = getStoredUser();
@@ -35,10 +35,10 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
         const importantTasks = tasks.filter((task) => task.priority === "HIGH");
         const plannedTasks = tasks.filter((task) => Boolean(task.dueDate));
         setMainItems([
-          { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: openTasks.length, active: true },
-          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantTasks.length },
-          { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: plannedTasks.length },
-          { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: tasks.length }
+          { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: openTasks.length, path: "/my-day" },
+          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantTasks.length, path: "/important" },
+          { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: plannedTasks.length, path: "/planned" },
+          { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: tasks.length, path: "/tasks" }
         ]);
         const categoryMap = /* @__PURE__ */ new Map();
         for (const category of categoryList) {
@@ -85,39 +85,39 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
       /* @__PURE__ */ jsx("button", { className: "text-on-surface-variant hover:text-on-surface transition-colors", children: /* @__PURE__ */ jsx(Search, { className: "w-5 h-5" }) })
     ] }),
     /* @__PURE__ */ jsxs("nav", { className: "flex-1 px-1 overflow-y-auto space-y-1", children: [
-      mainItems.map((item) => /* @__PURE__ */ jsxs(
-        "a",
+      mainItems.map((item) => /* @__PURE__ */ jsx(
+        NavLink,
         {
-          href: "#",
-          className: `flex items-center justify-between px-4 py-2 rounded-lg group transition-colors ${item.active ? "bg-secondary-container text-on-surface font-semibold" : "text-on-surface-variant hover:bg-surface-container-high"}`,
-          children: [
+          to: item.path,
+          className: ({ isActive }) => `flex items-center justify-between px-4 py-2 rounded-lg group transition-colors ${isActive ? "bg-secondary-container text-on-surface font-semibold" : "text-on-surface-variant hover:bg-surface-container-high"}`,
+          children: /* @__PURE__ */ jsxs("span", { className: "contents", children: [
             /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
               item.icon,
               /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold", children: item.label })
             ] }),
             /* @__PURE__ */ jsx("span", { className: "text-xs text-outline group-hover:text-primary", children: item.count })
-          ]
+          ] })
         },
         item.label
       )),
       /* @__PURE__ */ jsx("div", { className: "pt-4 pb-2 px-4", children: /* @__PURE__ */ jsx("div", { className: "h-px bg-outline-variant w-full" }) }),
       /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-        /* @__PURE__ */ jsxs(
+        /* @__PURE__ */ jsxs("div", { className: "flex items-center", children: [
+        /* @__PURE__ */ jsx(
           "button",
           {
             onClick: () => setCategoriesExpanded(!categoriesExpanded),
-            className: "w-full flex items-center gap-1 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors group",
-            children: [
-              /* @__PURE__ */ jsx(
+            className: "pl-4 pr-1 py-2 rounded-l-lg text-on-surface-variant hover:bg-surface-container-high transition-colors group",
+            children: /* @__PURE__ */ jsx(
                 ChevronRight,
                 {
                   className: `w-5 h-5 transition-transform duration-200 ${categoriesExpanded ? "rotate-90" : ""}`
                 }
               ),
-              /* @__PURE__ */ jsx("span", { className: "text-sm font-bold", children: "Categories" })
-            ]
           }
         ),
+        /* @__PURE__ */ jsx(NavLink, { to: "/categories", className: ({ isActive }) => `flex-1 px-2 py-2 rounded-r-lg text-sm font-bold transition-colors ${isActive ? "bg-secondary-container text-on-surface" : "text-on-surface-variant hover:bg-surface-container-high"}`, children: "Categories" })
+        ] }),
         categoriesExpanded && /* @__PURE__ */ jsx("div", { className: "ml-4 space-y-1", children: categories.length === 0 ? /* @__PURE__ */ jsx("p", { className: "px-4 py-2 text-xs text-on-surface-variant", children: "No categories yet" }) : categories.map((category) => /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
           /* @__PURE__ */ jsxs(
             "button",
@@ -152,10 +152,10 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "mt-auto px-1 space-y-1", children: [
       /* @__PURE__ */ jsxs(
-        "a",
+        NavLink,
         {
-          href: "#",
-          className: "flex items-center gap-4 text-on-surface-variant pl-4 py-2 hover:bg-surface-container-high transition-colors rounded-lg",
+          to: "/settings",
+          className: ({ isActive }) => `flex items-center gap-4 pl-4 py-2 transition-colors rounded-lg ${isActive ? "bg-secondary-container text-on-surface font-semibold" : "text-on-surface-variant hover:bg-surface-container-high"}`,
           children: [
             /* @__PURE__ */ jsx(Settings, { className: "w-5 h-5" }),
             /* @__PURE__ */ jsx("span", { className: "text-sm font-medium", children: "Settings" })

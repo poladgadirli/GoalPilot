@@ -165,6 +165,15 @@ async function logout() {
 async function fetchTasks(size = 20) {
   return requestJson(`/api/tasks?size=${size}`);
 }
+async function fetchTasksWithParams(params = {}) {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  }
+  return requestJson(`/api/tasks${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
+}
 async function fetchTaskById(id) {
   return requestJson(`/api/tasks/${id}`);
 }
@@ -183,8 +192,23 @@ async function updateTask(id, input) {
 async function fetchGoals() {
   return requestJson("/api/goals");
 }
+async function fetchGoalById(id) {
+  return requestJson(`/api/goals/${id}`);
+}
 async function fetchCategories() {
   return requestJson("/api/categories");
+}
+async function createCategory(input) {
+  return requestJson("/api/categories", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+async function updateCategory(id, input) {
+  return requestJson(`/api/categories/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input)
+  });
 }
 async function createGoalRecommendation(title, description) {
   return requestJson("/api/goal-recommendations", {
@@ -226,14 +250,17 @@ export {
   clearAuth,
   createGoal,
   createGoalRecommendation,
+  createCategory,
   createTask,
   completePlanTask,
   fetchCategories,
+  fetchGoalById,
   fetchGoals,
   fetchPlanByGoalId,
   fetchPlanProgress,
   fetchTaskById,
   fetchTasks,
+  fetchTasksWithParams,
   generateAiPlan,
   getStoredUser,
   isAuthenticated,
@@ -241,5 +268,6 @@ export {
   logout,
   register,
   storeAuth,
+  updateCategory,
   updateTask
 };

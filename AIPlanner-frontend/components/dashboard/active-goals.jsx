@@ -1,6 +1,7 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Target, ArrowRight } from "lucide-react";
 import { fetchGoals } from "@/lib/api";
 function ActiveGoals({ refreshKey = 0 }) {
@@ -46,7 +47,7 @@ function ActiveGoals({ refreshKey = 0 }) {
         /* @__PURE__ */ jsx(Target, { className: "w-5 h-5 text-primary" }),
         /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Active Goals" })
       ] }),
-      /* @__PURE__ */ jsxs("button", { className: "text-primary font-medium text-sm flex items-center gap-1 hover:gap-2 transition-all", children: [
+      /* @__PURE__ */ jsxs(Link, { to: "/goals", className: "text-primary font-medium text-sm flex items-center gap-1 hover:gap-2 transition-all", children: [
         "View all ",
         /* @__PURE__ */ jsx(ArrowRight, { className: "w-4 h-4" })
       ] })
@@ -54,8 +55,9 @@ function ActiveGoals({ refreshKey = 0 }) {
     /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
       isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading goals..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : activeGoals.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No goals yet." }) : null,
       activeGoals.map((goal) => /* @__PURE__ */ jsxs(
-        "div",
+        Link,
         {
+          to: `/goals/${goal.id}`,
           className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant hover:shadow-md transition-all",
           children: [
             /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between mb-3", children: [

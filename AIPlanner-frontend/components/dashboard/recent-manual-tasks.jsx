@@ -1,15 +1,15 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Clock, Check, Plus } from "lucide-react";
 import { fetchTasks, updateTask } from "@/lib/api";
-import { CreateTaskModal } from "./create-task-modal";
 function RecentManualTasks({ refreshKey = 0, onDataChange }) {
+  const navigate = useNavigate();
   const [recentManualTasks, setRecentManualTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [updatingTaskIds, setUpdatingTaskIds] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   useEffect(() => {
     let isMounted = true;
     async function loadTasks() {
@@ -39,9 +39,6 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
       isMounted = false;
     };
   }, [refreshKey]);
-  const handleTaskSaved = () => {
-    onDataChange?.();
-  };
   const handleToggleTask = async (task) => {
     const nextCompleted = !task.completed;
     setUpdatingTaskIds((ids) => [...ids, task.id]);
@@ -68,7 +65,7 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
       /* @__PURE__ */ jsxs(
         "button",
         {
-          onClick: () => setIsModalOpen(true),
+          onClick: () => navigate("/tasks/new"),
           className: "flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95",
           children: [
             /* @__PURE__ */ jsx(Plus, { className: "w-4 h-4" }),
@@ -97,7 +94,7 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
                 children: task.completed && /* @__PURE__ */ jsx(Check, { className: "w-3 h-3 text-on-primary" })
               }
             ),
-            /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ jsxs(Link, { to: `/tasks/${task.id}`, className: "flex-1 min-w-0", children: [
               /* @__PURE__ */ jsx(
                 "h3",
                 {
@@ -117,14 +114,6 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
       );
       })
     ] }),
-    /* @__PURE__ */ jsx(
-      CreateTaskModal,
-      {
-        isOpen: isModalOpen,
-        onClose: () => setIsModalOpen(false),
-        onSaved: handleTaskSaved
-      }
-    )
   ] });
 }
 export {
