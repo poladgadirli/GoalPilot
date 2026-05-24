@@ -32,9 +32,16 @@ function LegacyTaskRedirect() {
   return /* @__PURE__ */ jsx(Navigate, { to: `/tasks/${params.id}`, replace: true });
 }
 
+function RootRoute() {
+  if (isAuthenticated()) {
+    return /* @__PURE__ */ jsx(Navigate, { to: "/dashboard", replace: true });
+  }
+  return /* @__PURE__ */ jsx(SignUpPage, {});
+}
+
 function App() {
   return /* @__PURE__ */ jsx(BrowserRouter, { children: /* @__PURE__ */ jsxs(Routes, { children: [
-    /* @__PURE__ */ jsx(Route, { path: "/", element: /* @__PURE__ */ jsx(SignUpPage, {}) }),
+    /* @__PURE__ */ jsx(Route, { path: "/", element: /* @__PURE__ */ jsx(RootRoute, {}) }),
     /* @__PURE__ */ jsx(Route, { path: "/login", element: /* @__PURE__ */ jsx(LoginPage, {}) }),
     /* @__PURE__ */ jsx(Route, { path: "/dashboard", element: protectedElement(/* @__PURE__ */ jsx(DashboardPage, {})) }),
     /* @__PURE__ */ jsx(Route, { path: "/my-day", element: protectedElement(/* @__PURE__ */ jsx(MyDayPage, {})) }),

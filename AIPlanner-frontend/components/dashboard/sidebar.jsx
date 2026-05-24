@@ -3,6 +3,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import {
   Sun,
+  LayoutDashboard,
   Star,
   Calendar,
   CheckSquare,
@@ -17,6 +18,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [mainItems, setMainItems] = useState([
+    { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
     { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: 0, path: "/my-day" },
     { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: 0, path: "/important" },
     { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: 0, path: "/planned" },
@@ -35,6 +37,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
         const importantTasks = tasks.filter((task) => task.priority === "HIGH");
         const plannedTasks = tasks.filter((task) => Boolean(task.dueDate));
         setMainItems([
+          { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
           { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: openTasks.length, path: "/my-day" },
           { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantTasks.length, path: "/important" },
           { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: plannedTasks.length, path: "/planned" },
@@ -78,7 +81,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   };
   return /* @__PURE__ */ jsxs("aside", { className: "fixed left-0 top-0 h-full w-[260px] flex flex-col py-4 z-40 bg-surface border-r border-outline-variant", children: [
     /* @__PURE__ */ jsxs("div", { className: "px-6 mb-6 flex items-center justify-between", children: [
-      /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsxs(Link, { to: "/dashboard", className: "block rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40", children: [
         /* @__PURE__ */ jsx("span", { className: "text-sm font-bold text-primary", children: "AI Planner" }),
         /* @__PURE__ */ jsx("div", { className: "text-sm text-on-surface-variant", children: "Intelligent Management" })
       ] }),
@@ -95,7 +98,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
               item.icon,
               /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold", children: item.label })
             ] }),
-            /* @__PURE__ */ jsx("span", { className: "text-xs text-outline group-hover:text-primary", children: item.count })
+            item.count !== null ? /* @__PURE__ */ jsx("span", { className: "text-xs text-outline group-hover:text-primary", children: item.count }) : /* @__PURE__ */ jsx("span", { className: "w-4" })
           ] })
         },
         item.label
