@@ -59,14 +59,6 @@ public class GoalMapper {
             goal.setDailyAvailableMinutes(request.getDailyAvailableMinutes());
         }
 
-        if (request.getMinimumRecommendedDays() != null) {
-            goal.setMinimumRecommendedDays(request.getMinimumRecommendedDays());
-        }
-
-        if (request.getMinimumRecommendedMinutes() != null) {
-            goal.setMinimumRecommendedMinutes(request.getMinimumRecommendedMinutes());
-        }
-
         if (request.getStatus() != null) {
             goal.setStatus(request.getStatus());
         }
