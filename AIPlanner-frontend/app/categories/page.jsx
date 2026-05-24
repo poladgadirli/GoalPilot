@@ -1,23 +1,47 @@
 "use client";
-import { jsx, jsxs } from "react/jsx-runtime";
+
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { createCategory, fetchCategories, updateCategory } from "@/lib/api";
+import { createCategory, deleteCategory, fetchCategories, fetchTasksWithParams, updateCategory } from "@/lib/api";
+
+const defaultColor = "#64748B";
+
+function normalizeName(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
 
 function CategoriesContent() {
   const [categories, setCategories] = useState([]);
+  const [taskCounts, setTaskCounts] = useState({});
   const [name, setName] = useState("");
-  const [color, setColor] = useState("#64748B");
+  const [color, setColor] = useState(defaultColor);
   const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState(defaultColor);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [formError, setFormError] = useState(null);
 
   async function loadCategories() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      setCategories(await fetchCategories());
+      const [categoryList, tasksPage] = await Promise.all([
+        fetchCategories(),
+        fetchTasksWithParams({ size: 200 })
+      ]);
+      const counts = {};
+      for (const task of tasksPage.content ?? []) {
+        const categoryId = task.category?.id;
+        if (!categoryId) continue;
+        counts[categoryId] = (counts[categoryId] ?? 0) + 1;
+      }
+      setCategories(categoryList);
+      setTaskCounts(counts);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to load categories.");
     } finally {
@@ -29,59 +53,250 @@ function CategoriesContent() {
     loadCategories();
   }, []);
 
-  const resetForm = () => {
+  const resetCreateForm = () => {
     setName("");
-    setColor("#64748B");
-    setEditingId(null);
+    setFormError(null);
   };
 
-  const handleSubmit = async (event) => {
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditColor(defaultColor);
+    setFormError(null);
+  };
+
+  const beginEdit = (category) => {
+    setEditingId(category.id);
+    setEditName(category.name);
+    setEditColor(category.color ?? defaultColor);
+    setFormError(null);
+  };
+
+  const validateName = (value, currentId = null) => {
+    const normalized = normalizeName(value);
+    if (!normalized) return "Category name is required.";
+    const duplicate = categories.some(
+      (category) => category.id !== currentId && category.name.trim().toLowerCase() === normalized.toLowerCase()
+    );
+    if (duplicate) return "A category with this name already exists.";
+    return null;
+  };
+
+  const handleCreate = async (event) => {
     event.preventDefault();
-    if (!name.trim()) return;
+    const normalized = normalizeName(name);
+    const validationError = validateName(name);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
     setIsSubmitting(true);
     setErrorMessage(null);
+    setFormError(null);
     try {
-      if (editingId) {
-        await updateCategory(editingId, { name: name.trim(), color });
-      } else {
-        await createCategory({ name: name.trim(), color });
-      }
-      resetForm();
-      await loadCategories();
+      const createdCategory = await createCategory({ name: normalized, color });
+      setCategories((items) => [...items, createdCategory]);
+      resetCreateForm();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to save category.");
+      setFormError(error instanceof Error ? error.message : "Unable to create category.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: "Categories" }),
-    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading categories..." }) : null,
-    errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : null,
-    /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex flex-col md:flex-row gap-3", children: [
-      /* @__PURE__ */ jsx("input", { value: name, onChange: (event) => setName(event.target.value), placeholder: "Category name", className: "flex-1 bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 outline-none focus:border-primary" }),
-      /* @__PURE__ */ jsx("input", { type: "color", value: color, onChange: (event) => setColor(event.target.value), className: "h-10 w-16 bg-surface-container-low border border-outline-variant rounded-lg p-1" }),
-      /* @__PURE__ */ jsx("button", { type: "submit", disabled: isSubmitting || !name.trim(), className: "bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50", children: editingId ? "Save" : "Create" }),
-      editingId ? /* @__PURE__ */ jsx("button", { type: "button", onClick: resetForm, className: "bg-surface-container text-on-surface px-4 py-2 rounded-lg font-semibold text-sm", children: "Cancel" }) : null
-    ] }),
-    !isLoading && !errorMessage && categories.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No categories yet." }) : null,
-    /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3", children: categories.map((category) => /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex items-center justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
-        /* @__PURE__ */ jsx("span", { className: "w-4 h-4 rounded-full flex-shrink-0 border border-outline-variant", style: { backgroundColor: category.color ?? "#64748B" } }),
-        /* @__PURE__ */ jsx("span", { className: "font-semibold truncate", children: category.name })
-      ] }),
-      /* @__PURE__ */ jsx("button", { type: "button", onClick: () => {
-        setEditingId(category.id);
-        setName(category.name);
-        setColor(category.color ?? "#64748B");
-      }, className: "text-primary text-sm font-semibold hover:underline", children: "Edit" })
-    ] }, category.id)) })
-  ] });
+  const handleSaveEdit = async (categoryId) => {
+    const normalized = normalizeName(editName);
+    const validationError = validateName(editName, categoryId);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+    setSavingId(categoryId);
+    setErrorMessage(null);
+    setFormError(null);
+    try {
+      const updatedCategory = await updateCategory(categoryId, { name: normalized, color: editColor });
+      setCategories((items) => items.map((category) => category.id === categoryId ? updatedCategory : category));
+      cancelEdit();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Unable to update category.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleDelete = async (category) => {
+    const taskCount = taskCounts[category.id] ?? 0;
+    const message = taskCount > 0
+      ? `Delete "${category.name}"? It is used by ${taskCount} task${taskCount === 1 ? "" : "s"}.`
+      : `Delete "${category.name}"?`;
+    if (!window.confirm(message)) return;
+    setDeletingId(category.id);
+    setErrorMessage(null);
+    setFormError(null);
+    try {
+      await deleteCategory(category.id);
+      setCategories((items) => items.filter((item) => item.id !== category.id));
+      if (editingId === category.id) cancelEdit();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to delete category.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <section className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-serif font-semibold text-on-surface">Categories</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">Organize tasks by topic, project, or area</p>
+        </div>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-sm">
+          <span className="font-semibold text-on-surface">{categories.length}</span>
+          <span className="ml-1 text-on-surface-variant">categories</span>
+        </div>
+      </div>
+
+      <form onSubmit={handleCreate} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3">
+          <label className="space-y-1">
+            <span className="text-xs font-medium text-on-surface-variant">Category name</span>
+            <input
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value);
+                if (formError) setFormError(null);
+              }}
+              placeholder="e.g. Work, Study, Personal"
+              className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 outline-none focus:border-primary"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs font-medium text-on-surface-variant">Color</span>
+            <div className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2">
+              <span className="h-5 w-5 rounded-full border border-outline-variant" style={{ backgroundColor: color }} />
+              <input
+                type="color"
+                value={color}
+                onChange={(event) => setColor(event.target.value)}
+                className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
+                aria-label="Category color"
+              />
+            </div>
+          </label>
+          <button
+            type="submit"
+            disabled={isSubmitting || !name.trim()}
+            className="self-end bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
+          >
+            {isSubmitting ? "Creating..." : "Create"}
+          </button>
+        </div>
+        {formError ? <p className="text-sm text-error">{formError}</p> : null}
+      </form>
+
+      {isLoading ? (
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
+          Loading categories...
+        </div>
+      ) : null}
+
+      {errorMessage ? (
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error flex items-center justify-between gap-3">
+          <span>{errorMessage}</span>
+          <button type="button" onClick={loadCategories} className="text-xs font-semibold text-on-surface hover:underline">
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {!isLoading && !errorMessage && categories.length === 0 ? (
+        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
+          <h3 className="text-lg font-semibold text-on-surface">No categories yet</h3>
+          <p className="mt-2 text-sm text-on-surface-variant">Create categories to organize your tasks.</p>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {categories.map((category) => {
+          const isEditing = editingId === category.id;
+          const taskCount = taskCounts[category.id] ?? 0;
+          return (
+            <div key={category.id} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant space-y-3">
+              {isEditing ? (
+                <div className="space-y-3">
+                  <input
+                    value={editName}
+                    onChange={(event) => {
+                      setEditName(event.target.value);
+                      if (formError) setFormError(null);
+                    }}
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 outline-none focus:border-primary"
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="h-5 w-5 rounded-full border border-outline-variant" style={{ backgroundColor: editColor }} />
+                    <input
+                      type="color"
+                      value={editColor}
+                      onChange={(event) => setEditColor(event.target.value)}
+                      className="h-8 w-10 cursor-pointer border-0 bg-transparent p-0"
+                      aria-label="Edit category color"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveEdit(category.id)}
+                      disabled={savingId === category.id || !editName.trim()}
+                      className="ml-auto bg-primary text-on-primary px-3 py-2 rounded-lg font-semibold text-xs disabled:opacity-50"
+                    >
+                      {savingId === category.id ? "Saving..." : "Save"}
+                    </button>
+                    <button type="button" onClick={cancelEdit} className="bg-surface-container text-on-surface px-3 py-2 rounded-lg font-semibold text-xs">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <Link to={`/tasks?categoryId=${category.id}`} className="flex items-center gap-3 min-w-0">
+                    <span className="w-4 h-4 rounded-full flex-shrink-0 border border-outline-variant" style={{ backgroundColor: category.color ?? defaultColor }} />
+                    <span className="font-semibold truncate text-on-surface">{category.name}</span>
+                  </Link>
+                  <span className="flex-shrink-0 rounded bg-surface-container px-2 py-1 text-xs text-on-surface-variant">
+                    {taskCount} {taskCount === 1 ? "task" : "tasks"}
+                  </span>
+                </div>
+              )}
+
+              {!isEditing ? (
+                <div className="flex items-center justify-end gap-2">
+                  <button type="button" onClick={() => beginEdit(category)} className="bg-surface-container text-on-surface px-3 py-2 rounded-lg font-semibold text-xs">
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(category)}
+                    disabled={deletingId === category.id}
+                    className="bg-error-container/40 text-error px-3 py-2 rounded-lg font-semibold text-xs disabled:opacity-50"
+                  >
+                    {deletingId === category.id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function CategoriesPage() {
-  return /* @__PURE__ */ jsx(AppShell, { title: "Categories", children: /* @__PURE__ */ jsx(CategoriesContent, {}) });
+  return (
+    <AppShell title="Categories">
+      <CategoriesContent />
+    </AppShell>
+  );
 }
 
 export default CategoriesPage;

@@ -210,6 +210,11 @@ async function updateCategory(id, input) {
     body: JSON.stringify(input)
   });
 }
+async function deleteCategory(id) {
+  return requestJson(`/api/categories/${id}`, {
+    method: "DELETE"
+  });
+}
 async function createGoalRecommendation(title, description) {
   return requestJson("/api/goal-recommendations", {
     method: "POST",
@@ -253,6 +258,7 @@ export {
   createCategory,
   createTask,
   completePlanTask,
+  deleteCategory,
   fetchCategories,
   fetchGoalById,
   fetchGoals,

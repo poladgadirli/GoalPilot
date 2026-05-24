@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Check, Clock, Plus, Search } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchTasksWithParams, updateTask } from "@/lib/api";
@@ -130,6 +130,8 @@ function TaskCard({ task, isUpdating, onComplete }) {
 }
 
 function TasksContent() {
+  const [searchParams] = useSearchParams();
+  const categoryId = searchParams.get("categoryId");
   const todayKey = useMemo(() => getLocalDateKey(), []);
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -145,7 +147,12 @@ function TasksContent() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const page = await fetchTasksWithParams({ size: 200, sortBy: "createdAt", direction: "desc" });
+      const page = await fetchTasksWithParams({
+        size: 200,
+        sortBy: "createdAt",
+        direction: "desc",
+        categoryId: categoryId || undefined
+      });
       setTasks(page.content ?? []);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to load tasks.");
@@ -160,7 +167,12 @@ function TasksContent() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const page = await fetchTasksWithParams({ size: 200, sortBy: "createdAt", direction: "desc" });
+        const page = await fetchTasksWithParams({
+          size: 200,
+          sortBy: "createdAt",
+          direction: "desc",
+          categoryId: categoryId || undefined
+        });
         if (!isMounted) return;
         setTasks(page.content ?? []);
       } catch (error) {
@@ -174,7 +186,7 @@ function TasksContent() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [categoryId]);
 
   const summary = useMemo(() => {
     const completed = tasks.filter(isTaskDone).length;
@@ -193,13 +205,14 @@ function TasksContent() {
       const done = isTaskDone(task);
       const text = `${task.title ?? ""} ${task.description ?? ""}`.toLowerCase();
       const matchesSearch = !normalizedSearch || text.includes(normalizedSearch);
+      const matchesCategory = !categoryId || String(task.category?.id) === categoryId;
       const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
       let matchesDate = true;
       if (dateFilter === "none") matchesDate = !task.dueDate;
       if (dateFilter === "today") matchesDate = dueKey === todayKey;
       if (dateFilter === "upcoming") matchesDate = Boolean(dueKey) && dueKey > todayKey && !done;
       if (dateFilter === "overdue") matchesDate = Boolean(dueKey) && dueKey < todayKey && !done;
-      return matchesSearch && matchesStatus(task, statusFilter) && matchesPriority && matchesDate;
+      return matchesSearch && matchesCategory && matchesStatus(task, statusFilter) && matchesPriority && matchesDate;
     });
 
     return [...filtered].sort((first, second) => {
@@ -216,7 +229,7 @@ function TasksContent() {
       }
       return new Date(second.createdAt ?? 0).getTime() - new Date(first.createdAt ?? 0).getTime();
     });
-  }, [dateFilter, priorityFilter, searchTerm, sortOption, statusFilter, tasks, todayKey]);
+  }, [categoryId, dateFilter, priorityFilter, searchTerm, sortOption, statusFilter, tasks, todayKey]);
 
   const handleCompleteTask = async (task) => {
     setUpdatingTaskIds((ids) => [...ids, task.id]);
@@ -249,7 +262,7 @@ function TasksContent() {
     { label: "High Priority", value: summary.highPriority }
   ];
 
-  const hasFilters = searchTerm.trim() || statusFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all" || sortOption !== "newest";
+  const hasFilters = categoryId || searchTerm.trim() || statusFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all" || sortOption !== "newest";
   const noTasks = !isLoading && !errorMessage && tasks.length === 0;
   const noFilteredResults = !isLoading && !errorMessage && tasks.length > 0 && filteredTasks.length === 0;
 
@@ -330,6 +343,15 @@ function TasksContent() {
           <option value="priority">Priority</option>
         </select>
       </div>
+
+      {categoryId ? (
+        <div className="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant flex flex-col gap-2 text-sm text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
+          <span>Showing tasks in selected category.</span>
+          <Link to="/tasks" className="self-start text-xs font-semibold text-primary hover:underline sm:self-auto">
+            View all tasks
+          </Link>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">

@@ -13,6 +13,12 @@ import {
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { fetchCategories, fetchTasks, getStoredUser, logout } from "@/lib/api";
+const fallbackCategoryColor = "#64748B";
+function getCategoryColor(color) {
+  if (typeof color !== "string") return fallbackCategoryColor;
+  const trimmed = color.trim();
+  return /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(trimmed) ? trimmed : fallbackCategoryColor;
+}
 function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   const navigate = useNavigate();
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
@@ -48,6 +54,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
           categoryMap.set(category.id, {
             id: category.id,
             label: category.name,
+            color: category.color,
             count: 0,
             tasks: []
           });
@@ -122,25 +129,37 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
         /* @__PURE__ */ jsx(NavLink, { to: "/categories", className: ({ isActive }) => `flex-1 px-2 py-2 rounded-r-lg text-sm font-bold transition-colors ${isActive ? "bg-secondary-container text-on-surface" : "text-on-surface-variant hover:bg-surface-container-high"}`, children: "Categories" })
         ] }),
         categoriesExpanded && /* @__PURE__ */ jsx("div", { className: "ml-4 space-y-1", children: categories.length === 0 ? /* @__PURE__ */ jsx("p", { className: "px-4 py-2 text-xs text-on-surface-variant", children: "No categories yet" }) : categories.map((category) => /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: () => toggleCategory(category.id),
-              className: "w-full flex items-center justify-between px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors group",
-              children: [
-                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
-                  /* @__PURE__ */ jsx(
-                    ChevronRight,
-                    {
-                      className: `w-4 h-4 transition-transform duration-200 ${expandedCategories.includes(category.id) ? "rotate-90" : ""}`
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", { className: "text-sm font-medium", children: category.label })
-                ] }),
-                /* @__PURE__ */ jsx("span", { className: "text-xs text-outline", children: category.count })
-              ]
-            }
-          ),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors group", children: [
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                onClick: () => toggleCategory(category.id),
+                className: "p-2",
+                "aria-label": `${expandedCategories.includes(category.id) ? "Collapse" : "Expand"} ${category.label}`,
+                children: /* @__PURE__ */ jsx(
+                  ChevronRight,
+                  {
+                    className: `w-4 h-4 transition-transform duration-200 ${expandedCategories.includes(category.id) ? "rotate-90" : ""}`
+                  }
+                )
+              }
+            ),
+            /* @__PURE__ */ jsxs(
+              NavLink,
+              {
+                to: `/tasks?categoryId=${category.id}`,
+                className: ({ isActive }) => `flex min-w-0 flex-1 items-center justify-between gap-2 py-2 pr-3 text-sm font-medium ${isActive && window.location.search === `?categoryId=${category.id}` ? "text-on-surface font-semibold" : ""}`,
+                children: [
+                  /* @__PURE__ */ jsxs("span", { className: "flex min-w-0 items-center gap-2", children: [
+                    /* @__PURE__ */ jsx("span", { className: "h-2.5 w-2.5 flex-shrink-0 rounded-full border border-outline-variant", style: { backgroundColor: getCategoryColor(category.color) } }),
+                    /* @__PURE__ */ jsx("span", { className: "truncate", children: category.label })
+                  ] }),
+                  /* @__PURE__ */ jsx("span", { className: "text-xs text-outline group-hover:text-primary", children: category.count })
+                ]
+              }
+            )
+          ] }),
           expandedCategories.includes(category.id) && category.tasks.length > 0 && /* @__PURE__ */ jsx("div", { className: "ml-8 space-y-1", children: category.tasks.map((task) => /* @__PURE__ */ jsx(
             "button",
             {
