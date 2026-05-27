@@ -71,7 +71,7 @@ function ActiveGoals({ refreshKey = 0 }) {
               /* @__PURE__ */ jsx(
                 "span",
                 {
-                  className: `flex-shrink-0 whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${goal.status === "On Track" ? "bg-green-100/50 text-green-700" : goal.status === "At Risk" ? "bg-orange-100/50 text-orange-700" : "bg-error-container/30 text-error"}`,
+                  className: `flex-shrink-0 whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${goal.status === "On Track" ? "bg-green-100/50 text-green-700 dark:bg-green-900/30 dark:text-green-300" : goal.status === "At Risk" ? "bg-orange-100/50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" : "bg-error-container/30 text-error"}`,
                   children: goal.status
                 }
               )

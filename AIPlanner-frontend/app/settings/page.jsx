@@ -1,13 +1,33 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTheme } from "@/components/theme-provider";
 import { getStoredUser } from "@/lib/api";
 
 function SettingsContent() {
   const user = getStoredUser();
+  const { theme, setTheme } = useTheme();
+  const themeOptions = [
+    { value: "light", label: "Light" },
+    { value: "dark", label: "Dark" }
+  ];
 
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: "Settings" }),
+    /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-4", children: [
+      /* @__PURE__ */ jsx("h3", { className: "font-semibold", children: "Appearance" }),
+      /* @__PURE__ */ jsx("div", { className: "flex flex-wrap gap-2", children: themeOptions.map((option) => /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setTheme(option.value),
+          className: `rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${theme === option.value ? "border-primary bg-primary text-primary-foreground" : "border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high"}`,
+          "aria-pressed": theme === option.value,
+          children: option.label
+        },
+        option.value
+      )) })
+    ] }),
     /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-4", children: [
       /* @__PURE__ */ jsx("h3", { className: "font-semibold", children: "Account" }),
       user ? /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3 text-sm", children: [

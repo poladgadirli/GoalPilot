@@ -79,6 +79,79 @@
   --radius: 0.25rem;
 }
 
+.dark {
+  --background: #111214;
+  --foreground: #f4f2f4;
+
+  --surface: #111214;
+  --surface-dim: #0e0f11;
+  --surface-bright: #2a2b2f;
+  --surface-container-lowest: #17181b;
+  --surface-container-low: #1c1d21;
+  --surface-container: #232428;
+  --surface-container-high: #2b2c31;
+  --surface-container-highest: #34353a;
+  --surface-variant: #3e4048;
+  --surface-tint: #c4c8d6;
+
+  --on-surface: #f4f2f4;
+  --on-surface-variant: #c9c7ce;
+  --inverse-surface: #e4e2e4;
+  --inverse-on-surface: #303032;
+
+  --primary: #ffffff;
+  --primary-foreground: #111214;
+  --on-primary: #111214;
+  --primary-container: #d8deef;
+  --on-primary-container: #202637;
+  --primary-fixed: #dae2fd;
+  --primary-fixed-dim: #bec6e0;
+  --on-primary-fixed: #131b2e;
+  --on-primary-fixed-variant: #3f465c;
+  --inverse-primary: #3f465c;
+
+  --secondary: #c8cad5;
+  --secondary-foreground: #24262d;
+  --on-secondary: #24262d;
+  --secondary-container: #333640;
+  --on-secondary-container: #e2e3eb;
+  --secondary-fixed: #e1e2ed;
+  --secondary-fixed-dim: #c4c6d1;
+  --on-secondary-fixed: #191b24;
+  --on-secondary-fixed-variant: #444650;
+
+  --tertiary: #f3d19d;
+  --on-tertiary: #322208;
+  --tertiary-container: #463113;
+  --on-tertiary-container: #f4d8ae;
+  --tertiary-fixed: #fcdeb5;
+  --tertiary-fixed-dim: #dec29a;
+  --on-tertiary-fixed: #271901;
+  --on-tertiary-fixed-variant: #574425;
+
+  --outline: #9a99a0;
+  --outline-variant: #44454d;
+
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+
+  --card: var(--surface-container-lowest);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container-lowest);
+  --popover-foreground: var(--on-surface);
+  --muted: var(--surface-container);
+  --muted-foreground: var(--on-surface-variant);
+  --accent: var(--secondary-container);
+  --accent-foreground: var(--on-secondary-container);
+  --destructive: var(--error);
+  --destructive-foreground: var(--on-error);
+  --border: var(--outline-variant);
+  --input: var(--outline-variant);
+  --ring: var(--primary);
+}
+
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback', sans-serif;
   --font-serif: 'Literata', 'Georgia', serif;
@@ -168,6 +241,12 @@
   body {
     @apply bg-surface text-on-surface;
   }
+
+  input,
+  textarea,
+  select {
+    @apply text-on-surface placeholder:text-on-surface-variant;
+  }
 }
 
 /* Glass panel effect */
@@ -182,6 +261,11 @@
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.dark .glass-ai {
+  background: rgba(28, 29, 33, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .ai-glow {

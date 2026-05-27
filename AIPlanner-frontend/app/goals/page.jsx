@@ -41,7 +41,7 @@ function getStatusLabel(goal) {
 }
 
 function statusClass(label) {
-  if (label === "Completed") return "bg-green-100/70 text-green-700";
+  if (label === "Completed") return "bg-green-100/70 text-green-700 dark:bg-green-900/30 dark:text-green-300";
   if (label === "Behind") return "bg-error-container/40 text-error";
   if (label === "Not Started") return "bg-surface-container text-on-surface-variant";
   return "bg-secondary-container text-on-secondary-container";

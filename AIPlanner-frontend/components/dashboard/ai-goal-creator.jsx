@@ -61,7 +61,7 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
       /* @__PURE__ */ jsx(Sparkles, { className: "w-5 h-5 text-primary" }),
       /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "AI Goal Creator" })
     ] }),
-    successMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-green-700 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg", children: successMessage }) : null,
+    successMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-300 px-3 py-2 rounded-lg", children: successMessage }) : null,
     !isExpanded ? /* @__PURE__ */ jsxs(
       "button",
       {
