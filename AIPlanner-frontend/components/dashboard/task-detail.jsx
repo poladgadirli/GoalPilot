@@ -3,14 +3,16 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ArrowLeft, Calendar, Check, Clock, Sparkles, Star } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { fetchTaskById, updateTask, updateTaskImportant } from "@/lib/api";
 
-function formatDate(value) {
-  if (!value) return "No due date";
-  return new Date(value).toLocaleString();
+function formatDate(value, locale, fallback) {
+  if (!value) return fallback;
+  return new Date(value).toLocaleString(locale);
 }
 
 function TaskDetail({ taskId, onBack, onTaskUpdated }) {
+  const { t, enumLabel, dateLocale } = useTranslation();
   const params = useParams();
   const resolvedTaskId = taskId ?? params.taskId;
   const [task, setTask] = useState(null);
@@ -89,10 +91,10 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
           children: /* @__PURE__ */ jsx(ArrowLeft, { className: "w-5 h-5" })
         }
       ),
-      /* @__PURE__ */ jsx("h2", { className: "text-xl font-semibold text-on-surface", children: isLoading ? "Loading task..." : task?.title ?? "Task Details" })
+      /* @__PURE__ */ jsx("h2", { className: "text-xl font-semibold text-on-surface", children: isLoading ? t("loadingTask") : task?.title ?? t("taskDetails") })
     ] }),
     errorMessage && /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }),
-    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant text-on-surface-variant", children: "Loading task details..." }) : task && /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-12 gap-6", children: [
+    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant text-on-surface-variant", children: t("loadingTask") }) : task && /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-12 gap-6", children: [
       /* @__PURE__ */ jsxs("div", { className: "lg:col-span-8 space-y-6", children: [
         /* @__PURE__ */ jsxs("section", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-4 mb-6", children: [
@@ -119,21 +121,21 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
                   children: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5", style: { fill: task.important ? "currentColor" : "none" } })
                 }
               ),
-              /* @__PURE__ */ jsx("span", { className: "text-base font-semibold", children: task.completed ? "Completed" : "Mark as completed" })
+              /* @__PURE__ */ jsx("span", { className: "text-base font-semibold", children: task.completed ? t("completed") : t("markCompleted") })
             ] }),
             /* @__PURE__ */ jsxs("div", { className: "flex gap-2 flex-wrap justify-end", children: [
-              /* @__PURE__ */ jsx("span", { className: "px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-sm font-bold", children: task.priority ?? "No Priority" }),
+              /* @__PURE__ */ jsx("span", { className: "px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-sm font-bold", children: enumLabel(task.priority ?? "MEDIUM") }),
               /* @__PURE__ */ jsx("span", { className: "px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-sm", children: task.category?.name ?? "Uncategorized" })
             ] })
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
             /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("h3", { className: "text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2", children: "Description" }),
-              /* @__PURE__ */ jsx("p", { className: "text-base text-on-surface leading-relaxed", children: task.description || "No description added." })
+              /* @__PURE__ */ jsx("h3", { className: "text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2", children: t("description") }),
+              /* @__PURE__ */ jsx("p", { className: "text-base text-on-surface leading-relaxed", children: task.description || t("noDescription") })
             ] }),
             /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsx("h3", { className: "text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2", children: "Status" }),
-              /* @__PURE__ */ jsx("p", { className: "text-sm text-on-surface-variant", children: task.status ?? "TODO" })
+              /* @__PURE__ */ jsx("h3", { className: "text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2", children: t("status") }),
+              /* @__PURE__ */ jsx("p", { className: "text-sm text-on-surface-variant", children: enumLabel(task.status ?? "TODO") })
             ] })
           ] })
         ] })
@@ -141,26 +143,26 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
       /* @__PURE__ */ jsxs("div", { className: "lg:col-span-4 space-y-6", children: [
         /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-6", children: [
           /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-            /* @__PURE__ */ jsx("label", { className: "text-xs font-bold text-outline", children: "DUE DATE" }),
+            /* @__PURE__ */ jsx("label", { className: "text-xs font-bold text-outline", children: t("dueDate") }),
             /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 p-4 bg-surface-container-low rounded-xl", children: [
               /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5 text-primary" }),
-              /* @__PURE__ */ jsx("span", { className: "text-base font-semibold", children: formatDate(task.dueDate) })
+              /* @__PURE__ */ jsx("span", { className: "text-base font-semibold", children: formatDate(task.dueDate, dateLocale, t("noDueDate")) })
             ] })
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-            /* @__PURE__ */ jsx("label", { className: "text-xs font-bold text-outline", children: "CREATED" }),
+            /* @__PURE__ */ jsx("label", { className: "text-xs font-bold text-outline", children: t("created") }),
             /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 p-4 bg-surface-container-low rounded-xl", children: [
               /* @__PURE__ */ jsx(Clock, { className: "w-5 h-5 text-on-surface-variant" }),
-              /* @__PURE__ */ jsx("span", { className: "text-base", children: formatDate(task.createdAt) })
+              /* @__PURE__ */ jsx("span", { className: "text-base", children: formatDate(task.createdAt, dateLocale, t("noDueDate")) })
             ] })
           ] })
         ] }),
         /* @__PURE__ */ jsxs("div", { className: "glass-ai p-6 rounded-2xl border border-outline-variant flex flex-col gap-4", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
             /* @__PURE__ */ jsx(Sparkles, { className: "w-5 h-5 text-primary" }),
-            /* @__PURE__ */ jsx("span", { className: "text-sm font-bold", children: "AI Insight" })
+            /* @__PURE__ */ jsx("span", { className: "text-sm font-bold", children: t("aiInsight") })
           ] }),
-          /* @__PURE__ */ jsx("p", { className: "text-sm italic", children: "Task details are loaded from your planner data." })
+          /* @__PURE__ */ jsx("p", { className: "text-sm italic", children: t("taskLoadedInsight") })
         ] })
       ] })
     ] })

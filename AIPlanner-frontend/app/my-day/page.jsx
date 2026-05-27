@@ -6,6 +6,7 @@ import { AlertTriangle, CalendarDays, Check, Clock, Plus, Sparkles, Star } from 
 import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTranslation } from "@/i18n";
 import { completePlanTask, fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
 function getLocalDateKey(value = new Date()) {
@@ -25,17 +26,17 @@ function isTaskDone(task) {
   return Boolean(task.completed) || task.status === "DONE";
 }
 
-function formatTodayLabel() {
-  return new Date().toLocaleDateString(void 0, {
+function formatTodayLabel(locale) {
+  return new Date().toLocaleDateString(locale, {
     weekday: "long",
     month: "long",
     day: "numeric"
   });
 }
 
-function formatDueDate(value) {
-  if (!value) return "No due date";
-  return new Date(value).toLocaleString(void 0, {
+function formatDueDate(value, locale, fallback) {
+  if (!value) return fallback;
+  return new Date(value).toLocaleString(locale, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -78,7 +79,7 @@ function CheckboxButton({ checked, disabled, isUpdating, onClick, label }) {
   );
 }
 
-function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant }) {
+function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant, enumLabel, dateLocale, t }) {
   const navigate = useNavigate();
   const completed = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
@@ -126,7 +127,7 @@ function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onTo
         </h3>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
           {task.category?.name ? <span className="px-2 py-1 bg-surface-container rounded">{task.category.name}</span> : null}
-          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{task.priority ?? "MEDIUM"}</span>
+          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{enumLabel(task.priority ?? "MEDIUM")}</span>
           {estimated ? (
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -135,7 +136,7 @@ function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onTo
           ) : null}
           <span className="inline-flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />
-            {formatDueDate(task.dueDate)}
+            {formatDueDate(task.dueDate, dateLocale, t("noDueDate"))}
           </span>
         </div>
       </div>
@@ -177,6 +178,7 @@ function PlanTaskRow({ task, isUpdating, onComplete }) {
 }
 
 function MyDayContent({ onTasksChanged }) {
+  const { t, enumLabel, dateLocale } = useTranslation();
   const todayKey = useMemo(() => getLocalDateKey(), []);
   const [manualTasks, setManualTasks] = useState([]);
   const [planTasks, setPlanTasks] = useState([]);
@@ -310,24 +312,24 @@ function MyDayContent({ onTasksChanged }) {
   };
 
   const summaryCards = [
-    { label: "Due Today", value: todayManualTasks.length, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
-    { label: "Completed Today", value: completedToday, variant: "green", icon: <Check className="h-5 w-5" /> },
-    { label: "Overdue", value: overdueTasks.length, variant: "red", icon: <AlertTriangle className="h-5 w-5" /> },
-    { label: "Estimated Time", value: formatMinutes(estimatedMinutes) ?? "0 min", variant: "purple", icon: <Clock className="h-5 w-5" /> }
+    { label: t("dueToday"), value: todayManualTasks.length, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
+    { label: t("completedToday"), value: completedToday, variant: "green", icon: <Check className="h-5 w-5" /> },
+    { label: t("overdue"), value: overdueTasks.length, variant: "red", icon: <AlertTriangle className="h-5 w-5" /> },
+    { label: t("estimatedTime"), value: formatMinutes(estimatedMinutes) ?? "0 min", variant: "purple", icon: <Clock className="h-5 w-5" /> }
   ];
 
   return (
     <section className="space-y-6">
       <PageHeader
-        title="My Day"
-        subtitle={formatTodayLabel()}
+        title={t("myDay")}
+        subtitle={formatTodayLabel(dateLocale)}
         action={(
           <Link
             to="/tasks/new"
             className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            New Task
+            {t("newTask")}
           </Link>
         )}
       />
@@ -340,7 +342,7 @@ function MyDayContent({ onTasksChanged }) {
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
-          Loading My Day...
+          {t("loading")}...
         </div>
       ) : null}
 
@@ -348,23 +350,23 @@ function MyDayContent({ onTasksChanged }) {
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error flex items-center justify-between gap-3">
           <span>{errorMessage}</span>
           <button type="button" onClick={loadDay} className="text-xs font-semibold text-on-surface hover:underline">
-            Retry
+            {t("retry")}
           </button>
         </div>
       ) : null}
 
       {isEmpty ? (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
-          <h3 className="text-lg font-semibold text-on-surface">Your day is clear</h3>
+          <h3 className="text-lg font-semibold text-on-surface">{t("dayClear")}</h3>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Add a task or generate an AI plan to start organizing your day.
+            {t("dayClearHelp")}
           </p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link to="/tasks/new" className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary">
-              New Task
+              {t("newTask")}
             </Link>
             <Link to="/goals/new" className="inline-flex items-center justify-center rounded-lg bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface">
-              Create Goal
+              {t("createNewGoal")}
             </Link>
           </div>
         </div>
@@ -375,7 +377,7 @@ function MyDayContent({ onTasksChanged }) {
           <div className="xl:col-span-2 space-y-6">
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-lg font-semibold text-on-surface">Today's Manual Tasks</h3>
+                <h3 className="text-lg font-semibold text-on-surface">{t("todaysManualTasks")}</h3>
                 <span className="text-xs text-on-surface-variant">{todayManualTasks.length} tasks</span>
               </div>
               {todayManualTasks.length === 0 ? (
@@ -392,6 +394,9 @@ function MyDayContent({ onTasksChanged }) {
                       isUpdatingImportant={updatingImportantIds.includes(task.id)}
                       onComplete={handleCompleteManualTask}
                       onToggleImportant={handleToggleImportant}
+                      enumLabel={enumLabel}
+                      dateLocale={dateLocale}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -402,7 +407,7 @@ function MyDayContent({ onTasksChanged }) {
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-error" />
-                  <h3 className="text-lg font-semibold text-on-surface">Overdue Tasks</h3>
+                  <h3 className="text-lg font-semibold text-on-surface">{t("overdue")}</h3>
                 </div>
                 <div className="space-y-2">
                   {overdueTasks.map((task) => (
@@ -413,7 +418,7 @@ function MyDayContent({ onTasksChanged }) {
                       className="block bg-error-container/20 p-4 rounded-xl border border-error/20 hover:border-error/40 transition-all"
                     >
                       <h4 className="font-semibold text-on-surface">{task.title}</h4>
-                      <p className="mt-1 text-xs text-on-surface-variant">Due {formatDueDate(task.dueDate)}</p>
+                      <p className="mt-1 text-xs text-on-surface-variant">{t("dueDate")} {formatDueDate(task.dueDate, dateLocale, t("noDueDate"))}</p>
                     </Link>
                   ))}
                 </div>
@@ -424,7 +429,7 @@ function MyDayContent({ onTasksChanged }) {
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold text-on-surface">Today's AI Plan Tasks</h3>
+              <h3 className="text-lg font-semibold text-on-surface">{t("todaysAiPlanTasks")}</h3>
             </div>
             {planTasks.length === 0 ? (
               <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">

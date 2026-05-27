@@ -13,6 +13,7 @@ import {
   Target
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "@/i18n";
 import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser, logout } from "@/lib/api";
 const fallbackCategoryColor = "#64748B";
 function getCategoryColor(color) {
@@ -21,16 +22,17 @@ function getCategoryColor(color) {
   return /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(trimmed) ? trimmed : fallbackCategoryColor;
 }
 function Sidebar({ onTaskSelect, refreshKey = 0 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [mainItems, setMainItems] = useState([
-    { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
-    { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), label: "Goals", count: 0, path: "/goals" },
-    { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: 0, path: "/my-day" },
-    { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: 0, path: "/important" },
-    { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: 0, path: "/planned" },
-    { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: 0, path: "/tasks" }
+    { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), labelKey: "dashboard", count: null, path: "/dashboard" },
+    { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), labelKey: "goals", count: 0, path: "/goals" },
+    { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), labelKey: "myDay", count: 0, path: "/my-day" },
+    { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), labelKey: "important", count: 0, path: "/important" },
+    { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), labelKey: "planned", count: 0, path: "/planned" },
+    { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), labelKey: "tasks", count: 0, path: "/tasks" }
   ]);
   const [categories, setCategories] = useState([]);
   const user = getStoredUser();
@@ -50,12 +52,12 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
         const importantCount = importantTasksPage.totalElements ?? (importantTasksPage.content ?? []).length;
         const plannedTasks = tasks.filter((task) => Boolean(task.dueDate));
         setMainItems([
-          { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), label: "Dashboard", count: null, path: "/dashboard" },
-          { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), label: "Goals", count: goalList.length, path: "/goals" },
-          { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), label: "My Day", count: openTasks.length, path: "/my-day" },
-          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), label: "Important", count: importantCount, path: "/important" },
-          { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), label: "Planned", count: plannedTasks.length, path: "/planned" },
-          { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), label: "Tasks", count: tasks.length, path: "/tasks" }
+          { icon: /* @__PURE__ */ jsx(LayoutDashboard, { className: "w-5 h-5" }), labelKey: "dashboard", count: null, path: "/dashboard" },
+          { icon: /* @__PURE__ */ jsx(Target, { className: "w-5 h-5" }), labelKey: "goals", count: goalList.length, path: "/goals" },
+          { icon: /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5" }), labelKey: "myDay", count: openTasks.length, path: "/my-day" },
+          { icon: /* @__PURE__ */ jsx(Star, { className: "w-5 h-5" }), labelKey: "important", count: importantCount, path: "/important" },
+          { icon: /* @__PURE__ */ jsx(Calendar, { className: "w-5 h-5" }), labelKey: "planned", count: plannedTasks.length, path: "/planned" },
+          { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), labelKey: "tasks", count: tasks.length, path: "/tasks" }
         ]);
         const categoryMap = /* @__PURE__ */ new Map();
         for (const category of categoryList) {
@@ -98,7 +100,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
     /* @__PURE__ */ jsxs("div", { className: "px-6 mb-6 flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs(Link, { to: "/dashboard", className: "block rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40", children: [
         /* @__PURE__ */ jsx("span", { className: "text-sm font-bold text-primary", children: "AI Planner" }),
-        /* @__PURE__ */ jsx("div", { className: "text-sm text-on-surface-variant", children: "Intelligent Management" })
+        /* @__PURE__ */ jsx("div", { className: "text-sm text-on-surface-variant", children: t("appSubtitle") })
       ] }),
       /* @__PURE__ */ jsx("button", { className: "text-on-surface-variant hover:text-on-surface transition-colors", children: /* @__PURE__ */ jsx(Search, { className: "w-5 h-5" }) })
     ] }),
@@ -111,12 +113,12 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
           children: /* @__PURE__ */ jsxs("span", { className: "contents", children: [
             /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
               item.icon,
-              /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold", children: item.label })
+              /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold", children: t(item.labelKey) })
             ] }),
             item.count !== null ? /* @__PURE__ */ jsx("span", { className: "text-xs text-outline group-hover:text-primary", children: item.count }) : /* @__PURE__ */ jsx("span", { className: "w-4" })
           ] })
         },
-        item.label
+        item.labelKey
       )),
       /* @__PURE__ */ jsx("div", { className: "pt-4 pb-2 px-4", children: /* @__PURE__ */ jsx("div", { className: "h-px bg-outline-variant w-full" }) }),
       /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
@@ -134,7 +136,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
               ),
           }
         ),
-        /* @__PURE__ */ jsx(NavLink, { to: "/categories", className: ({ isActive }) => `flex-1 px-2 py-2 rounded-r-lg text-sm font-bold transition-colors ${isActive ? "bg-secondary-container text-on-surface" : "text-on-surface-variant hover:bg-surface-container-high"}`, children: "Categories" })
+        /* @__PURE__ */ jsx(NavLink, { to: "/categories", className: ({ isActive }) => `flex-1 px-2 py-2 rounded-r-lg text-sm font-bold transition-colors ${isActive ? "bg-secondary-container text-on-surface" : "text-on-surface-variant hover:bg-surface-container-high"}`, children: t("categories") })
         ] }),
         categoriesExpanded && /* @__PURE__ */ jsx("div", { className: "ml-4 space-y-1", children: categories.length === 0 ? /* @__PURE__ */ jsx("p", { className: "px-4 py-2 text-xs text-on-surface-variant", children: "No categories yet" }) : categories.map((category) => /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors group", children: [
@@ -188,7 +190,7 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
           className: ({ isActive }) => `flex items-center gap-4 pl-4 py-2 transition-colors rounded-lg ${isActive ? "bg-secondary-container text-on-surface font-semibold" : "text-on-surface-variant hover:bg-surface-container-high"}`,
           children: [
             /* @__PURE__ */ jsx(Settings, { className: "w-5 h-5" }),
-            /* @__PURE__ */ jsx("span", { className: "text-sm font-medium", children: "Settings" })
+            /* @__PURE__ */ jsx("span", { className: "text-sm font-medium", children: t("settings") })
           ]
         }
       ),
@@ -202,11 +204,11 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
           {
             onClick: handleLogout,
             className: "text-xs text-primary font-semibold hover:underline flex-shrink-0",
-            children: "Log out"
+            children: t("logout")
           }
         )
       ] }),
-      /* @__PURE__ */ jsx("div", { className: "px-4 pb-2", children: /* @__PURE__ */ jsx(Link, { to: "/login", className: "text-xs text-on-surface-variant hover:text-primary", children: "Switch account" }) })
+      /* @__PURE__ */ jsx("div", { className: "px-4 pb-2", children: /* @__PURE__ */ jsx(Link, { to: "/login", className: "text-xs text-on-surface-variant hover:text-primary", children: t("switchAccount") }) })
     ] })
   ] });
 }

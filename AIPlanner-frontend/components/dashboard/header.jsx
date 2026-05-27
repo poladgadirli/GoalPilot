@@ -2,12 +2,29 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { Bell, History, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useTranslation } from "@/i18n";
 function Header({ title }) {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === "dark";
+  const titleMap = {
+    Dashboard: "dashboard",
+    Goals: "goals",
+    "My Day": "myDay",
+    Important: "important",
+    Planned: "planned",
+    Tasks: "tasks",
+    Categories: "categories",
+    Settings: "settings",
+    "New Task": "newTask",
+    "Task Details": "taskDetails",
+    "New Goal": "newGoal",
+    "Goal Details": "goalDetails"
+  };
+  const displayTitle = titleMap[title] ? t(titleMap[title]) : title;
 
   return /* @__PURE__ */ jsxs("header", { className: "flex justify-between items-center px-6 h-16 w-full bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-30", children: [
-    /* @__PURE__ */ jsx("div", { className: "flex items-center gap-6 flex-1", children: /* @__PURE__ */ jsx("h1", { className: "text-xl font-semibold text-on-surface", children: title }) }),
+    /* @__PURE__ */ jsx("div", { className: "flex items-center gap-6 flex-1", children: /* @__PURE__ */ jsx("h1", { className: "text-xl font-semibold text-on-surface", children: displayTitle }) }),
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
       /* @__PURE__ */ jsx("button", { type: "button", onClick: toggleTheme, className: "p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-150", "aria-label": isDark ? "Switch to light theme" : "Switch to dark theme", title: isDark ? "Switch to light theme" : "Switch to dark theme", children: isDark ? /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5 text-on-surface-variant" }) : /* @__PURE__ */ jsx(Moon, { className: "w-5 h-5 text-on-surface-variant" }) }),
       /* @__PURE__ */ jsx("button", { className: "p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-150", children: /* @__PURE__ */ jsx(Bell, { className: "w-5 h-5 text-on-surface-variant" }) }),

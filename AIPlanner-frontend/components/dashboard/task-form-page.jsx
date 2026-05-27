@@ -3,6 +3,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/page-header";
+import { useTranslation } from "@/i18n";
 import { createTask, fetchCategories } from "@/lib/api";
 
 function toLocalDateTime(value) {
@@ -10,6 +11,7 @@ function toLocalDateTime(value) {
 }
 
 function TaskFormPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -65,8 +67,8 @@ function TaskFormPage() {
   };
 
   return /* @__PURE__ */ jsxs("section", { className: "space-y-6", children: [
-    /* @__PURE__ */ jsx(PageHeader, { title: "New Task", subtitle: "Create a manual task for your planner" }),
-    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading form..." }) : null,
+    /* @__PURE__ */ jsx(PageHeader, { title: t("newTask"), subtitle: t("manageManualTasks") }),
+    isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: `${t("loading")}...` }) : null,
     errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : null,
     !isLoading ? /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-5", children: [
       /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
@@ -74,29 +76,29 @@ function TaskFormPage() {
         /* @__PURE__ */ jsx("input", { value: title, onChange: (event) => setTitle(event.target.value), className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary", required: true })
       ] }),
       /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-        /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: "Description" }),
+        /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: t("description") }),
         /* @__PURE__ */ jsx("textarea", { value: description, onChange: (event) => setDescription(event.target.value), rows: 4, className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary resize-none" })
       ] }),
       /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
         /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: "Category" }),
+          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: t("categories") }),
           /* @__PURE__ */ jsxs("select", { value: categoryId, onChange: (event) => setCategoryId(event.target.value), className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary", children: [
             /* @__PURE__ */ jsx("option", { value: "", children: "No category" }),
             categories.map((category) => /* @__PURE__ */ jsx("option", { value: category.id, children: category.name }, category.id))
           ] })
         ] }),
         /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: "Due date" }),
+          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: t("dueDate") }),
           /* @__PURE__ */ jsx("input", { type: "datetime-local", value: dueDate, onChange: (event) => setDueDate(event.target.value), className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary" })
         ] }),
         /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
-          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: "Priority" }),
-          /* @__PURE__ */ jsx("select", { value: priority, onChange: (event) => setPriority(event.target.value), className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary", children: ["LOW", "MEDIUM", "HIGH"].map((value) => /* @__PURE__ */ jsx("option", { value, children: value }, value)) })
+          /* @__PURE__ */ jsx("label", { className: "text-xs font-medium text-on-surface-variant", children: t("highPriority") }),
+          /* @__PURE__ */ jsx("select", { value: priority, onChange: (event) => setPriority(event.target.value), className: "w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 outline-none focus:border-primary", children: ["LOW", "MEDIUM", "HIGH"].map((value) => /* @__PURE__ */ jsx("option", { value, children: t(value.toLowerCase()) }, value)) })
         ] })
       ] }),
       /* @__PURE__ */ jsxs("div", { className: "flex justify-end gap-3 pt-2", children: [
-        /* @__PURE__ */ jsx("button", { type: "button", onClick: () => navigate("/tasks"), className: "px-5 py-2 rounded-lg bg-surface-container text-on-surface font-semibold text-sm", children: "Cancel" }),
-        /* @__PURE__ */ jsx("button", { type: "submit", disabled: isSubmitting || !title.trim(), className: "px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm disabled:opacity-50", children: isSubmitting ? "Saving..." : "Create Task" })
+        /* @__PURE__ */ jsx("button", { type: "button", onClick: () => navigate("/tasks"), className: "px-5 py-2 rounded-lg bg-surface-container text-on-surface font-semibold text-sm", children: t("cancel") }),
+        /* @__PURE__ */ jsx("button", { type: "submit", disabled: isSubmitting || !title.trim(), className: "px-5 py-2 rounded-lg bg-primary text-on-primary font-semibold text-sm disabled:opacity-50", children: isSubmitting ? `${t("save")}...` : t("create") })
       ] })
     ] }) : null
   ] });

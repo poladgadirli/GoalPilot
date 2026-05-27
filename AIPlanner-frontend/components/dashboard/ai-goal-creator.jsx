@@ -3,12 +3,14 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Plus } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import {
   createGoal,
   createGoalRecommendation,
   generateAiPlan
 } from "@/lib/api";
 function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [goalTitle, setGoalTitle] = useState("");
@@ -59,7 +61,7 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsx(Sparkles, { className: "w-5 h-5 text-primary" }),
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "AI Goal Creator" })
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: t("aiGoalCreator") })
     ] }),
     successMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-300 px-3 py-2 rounded-lg", children: successMessage }) : null,
     !isExpanded ? /* @__PURE__ */ jsxs(
@@ -70,8 +72,8 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
         children: [
           /* @__PURE__ */ jsx(Plus, { className: "w-5 h-5 text-primary flex-shrink-0" }),
           /* @__PURE__ */ jsxs("div", { children: [
-            /* @__PURE__ */ jsx("p", { className: "font-semibold text-on-surface text-sm", children: "Create new goal" }),
-            /* @__PURE__ */ jsx("p", { className: "text-xs text-on-surface-variant", children: "Let AI help you plan your next objective" })
+            /* @__PURE__ */ jsx("p", { className: "font-semibold text-on-surface text-sm", children: t("createNewGoal") }),
+            /* @__PURE__ */ jsx("p", { className: "text-xs text-on-surface-variant", children: t("aiGoalHelp") })
           ] })
         ]
       }
@@ -104,7 +106,7 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
             onClick: handleCreateGoal,
             disabled: isSubmitting || !goalTitle.trim(),
             className: "flex-1 bg-primary text-on-primary font-semibold py-2 rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-50",
-            children: isSubmitting ? "Creating..." : "Create Goal"
+            children: isSubmitting ? `${t("create")}...` : t("createNewGoal")
           }
         ),
         /* @__PURE__ */ jsx(
@@ -118,7 +120,7 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
             },
             disabled: isSubmitting,
             className: "flex-1 bg-surface-container text-on-surface font-semibold py-2 rounded-lg hover:bg-surface-container-high transition-all text-sm",
-            children: "Cancel"
+            children: t("cancel")
           }
         )
       ] })

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTranslation } from "@/i18n";
 import { createCategory, deleteCategory, fetchCategories, fetchTasksWithParams, updateCategory } from "@/lib/api";
 
 const defaultColor = "#64748B";
@@ -13,6 +14,7 @@ function normalizeName(value) {
 }
 
 function CategoriesContent() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [taskCounts, setTaskCounts] = useState({});
   const [name, setName] = useState("");
@@ -149,12 +151,12 @@ function CategoriesContent() {
   return (
     <section className="space-y-6">
       <PageHeader
-        title="Categories"
-        subtitle="Organize tasks by topic, project, or area"
+        title={t("categories")}
+        subtitle={t("categoriesSubtitle")}
         action={(
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-sm">
             <span className="font-semibold text-on-surface">{categories.length}</span>
-            <span className="ml-1 text-on-surface-variant">categories</span>
+            <span className="ml-1 text-on-surface-variant">{t("categories").toLowerCase()}</span>
           </div>
         )}
       />
@@ -162,7 +164,7 @@ function CategoriesContent() {
       <form onSubmit={handleCreate} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3">
           <label className="space-y-1">
-            <span className="text-xs font-medium text-on-surface-variant">Category name</span>
+            <span className="text-xs font-medium text-on-surface-variant">{t("categoryName")}</span>
             <input
               value={name}
               onChange={(event) => {
@@ -191,7 +193,7 @@ function CategoriesContent() {
             disabled={isSubmitting || !name.trim()}
             className="self-end bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
           >
-            {isSubmitting ? "Creating..." : "Create"}
+            {isSubmitting ? `${t("create")}...` : t("create")}
           </button>
         </div>
         {formError ? <p className="text-sm text-error">{formError}</p> : null}
@@ -199,7 +201,7 @@ function CategoriesContent() {
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
-          Loading categories...
+          {t("loading")}...
         </div>
       ) : null}
 
@@ -207,15 +209,15 @@ function CategoriesContent() {
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error flex items-center justify-between gap-3">
           <span>{errorMessage}</span>
           <button type="button" onClick={loadCategories} className="text-xs font-semibold text-on-surface hover:underline">
-            Retry
+            {t("retry")}
           </button>
         </div>
       ) : null}
 
       {!isLoading && !errorMessage && categories.length === 0 ? (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
-          <h3 className="text-lg font-semibold text-on-surface">No categories yet</h3>
-          <p className="mt-2 text-sm text-on-surface-variant">Create categories to organize your tasks.</p>
+          <h3 className="text-lg font-semibold text-on-surface">{t("noCategoriesYet")}</h3>
+          <p className="mt-2 text-sm text-on-surface-variant">{t("createCategoriesHelp")}</p>
         </div>
       ) : null}
 
@@ -250,10 +252,10 @@ function CategoriesContent() {
                       disabled={savingId === category.id || !editName.trim()}
                       className="ml-auto bg-primary text-on-primary px-3 py-2 rounded-lg font-semibold text-xs disabled:opacity-50"
                     >
-                      {savingId === category.id ? "Saving..." : "Save"}
+                      {savingId === category.id ? `${t("save")}...` : t("save")}
                     </button>
                     <button type="button" onClick={cancelEdit} className="bg-surface-container text-on-surface px-3 py-2 rounded-lg font-semibold text-xs">
-                      Cancel
+                      {t("cancel")}
                     </button>
                   </div>
                 </div>
@@ -272,7 +274,7 @@ function CategoriesContent() {
               {!isEditing ? (
                 <div className="flex items-center justify-end gap-2">
                   <button type="button" onClick={() => beginEdit(category)} className="bg-surface-container text-on-surface px-3 py-2 rounded-lg font-semibold text-xs">
-                    Edit
+                    {t("edit")}
                   </button>
                   <button
                     type="button"
@@ -280,7 +282,7 @@ function CategoriesContent() {
                     disabled={deletingId === category.id}
                     className="bg-error-container/40 text-error px-3 py-2 rounded-lg font-semibold text-xs disabled:opacity-50"
                   >
-                    {deletingId === category.id ? "Deleting..." : "Delete"}
+                    {deletingId === category.id ? `${t("delete")}...` : t("delete")}
                   </button>
                 </div>
               ) : null}

@@ -5,11 +5,12 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Check, Clock, Target, Trash2 } from "lucide-react";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTranslation } from "@/i18n";
 import { deleteGoal, fetchGoalById, fetchPlanByGoalId } from "@/lib/api";
 
-function formatDate(value) {
-  if (!value) return "Not set";
-  return new Date(`${value}T12:00:00`).toLocaleDateString(void 0, {
+function formatDate(value, locale, fallback) {
+  if (!value) return fallback;
+  return new Date(`${value}T12:00:00`).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric"
@@ -29,9 +30,9 @@ function getPlanStats(plan) {
 }
 
 function statusLabel(goal, progress) {
-  if (goal?.status === "COMPLETED") return "Completed";
-  if (progress === 0) return "Not Started";
-  return goal?.status === "ACTIVE" ? "On Track" : goal?.status ?? "Active";
+  if (goal?.status === "COMPLETED") return "completed";
+  if (progress === 0) return "notStarted";
+  return goal?.status === "ACTIVE" ? "onTrack" : "active";
 }
 
 function getGoalBackTarget(from) {
@@ -39,6 +40,7 @@ function getGoalBackTarget(from) {
 }
 
 function GoalDetailContent() {
+  const { t, dateLocale } = useTranslation();
   const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -116,10 +118,10 @@ function GoalDetailContent() {
         <div>
           <Link to={backTarget} className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t("goals")}
           </Link>
           <h2 className="text-xl font-semibold text-on-surface">
-            {isLoading ? "Loading goal..." : goal?.title ?? "Goal Details"}
+            {isLoading ? `${t("loading")}...` : goal?.title ?? t("goals")}
           </h2>
           {goal?.description ? <p className="mt-1 text-sm text-on-surface-variant">{goal.description}</p> : null}
         </div>
@@ -131,14 +133,14 @@ function GoalDetailContent() {
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-surface-container px-3 py-2 text-sm font-semibold text-error transition-all hover:bg-error-container/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Trash2 className="h-4 w-4" />
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? `${t("delete")}...` : t("delete")}
           </button>
         ) : null}
       </div>
 
       {isLoading ? (
         <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-sm text-on-surface-variant">
-          Loading goal...
+          {t("loading")}...
         </div>
       ) : null}
 
@@ -146,7 +148,7 @@ function GoalDetailContent() {
         <div className="flex items-center justify-between gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-sm text-error">
           <span>{errorMessage}</span>
           <button type="button" onClick={loadGoal} className="text-xs font-semibold text-on-surface hover:underline">
-            Retry
+            {t("retry")}
           </button>
         </div>
       ) : null}
@@ -160,17 +162,17 @@ function GoalDetailContent() {
       {goal ? (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Status" value={statusLabel(goal, progress)} variant="blue" icon={<Target className="h-5 w-5" />} />
-            <StatCard title="Deadline" value={formatDate(goal.endDate)} variant="purple" icon={<CalendarDays className="h-5 w-5" />} />
-            <StatCard title="Daily Time" value={`${goal.dailyAvailableMinutes ?? 0} min`} variant="orange" icon={<Clock className="h-5 w-5" />} />
-            <StatCard title="Plan Tasks" value={`${stats.completedTasks}/${stats.totalTasks}`} variant="green" icon={<Check className="h-5 w-5" />} />
+            <StatCard title={t("status")} value={t(statusLabel(goal, progress))} variant="blue" icon={<Target className="h-5 w-5" />} />
+            <StatCard title={t("deadline")} value={formatDate(goal.endDate, dateLocale, t("noDueDate"))} variant="purple" icon={<CalendarDays className="h-5 w-5" />} />
+            <StatCard title={t("estimatedTime")} value={`${goal.dailyAvailableMinutes ?? 0} min`} variant="orange" icon={<Clock className="h-5 w-5" />} />
+            <StatCard title={t("plannedTasks")} value={`${stats.completedTasks}/${stats.totalTasks}`} variant="green" icon={<Check className="h-5 w-5" />} />
           </div>
 
           <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-on-surface">Progress</h3>
+                <h3 className="font-semibold text-on-surface">{t("progress")}</h3>
               </div>
               <span className="text-sm font-semibold text-on-surface-variant">{progressLabel}</span>
             </div>
@@ -198,7 +200,7 @@ function GoalDetailContent() {
                         <h4 className="font-semibold text-on-surface">{day.title ?? `Day ${day.dayNumber}`}</h4>
                         <p className="mt-1 text-xs text-on-surface-variant">
                           <CalendarDays className="mr-1 inline h-3.5 w-3.5" />
-                          {formatDate(day.date)}
+                          {formatDate(day.date, dateLocale, t("noDueDate"))}
                         </p>
                       </div>
                       {day.restDay ? <span className="rounded bg-surface-container px-2 py-1 text-xs text-on-surface-variant">Rest day</span> : null}

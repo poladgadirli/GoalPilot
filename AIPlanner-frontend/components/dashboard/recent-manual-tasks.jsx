@@ -3,8 +3,10 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Clock, Check, Plus, Star } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { fetchTasks, updateTask, updateTaskImportant } from "@/lib/api";
 function RecentManualTasks({ refreshKey = 0, onDataChange }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [recentManualTasks, setRecentManualTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +82,7 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
   };
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Recent Manual Tasks" }),
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: t("recentManualTasks") }),
       /* @__PURE__ */ jsxs(
         "button",
         {
@@ -88,13 +90,13 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
           className: "flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95",
           children: [
             /* @__PURE__ */ jsx(Plus, { className: "w-4 h-4" }),
-            "New Task"
+            t("newTask")
           ]
         }
       )
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
-      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: "Loading tasks..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-error", children: errorMessage }) : recentManualTasks.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: "No tasks yet." }) : null,
+      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: `${t("loading")}...` }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-error", children: errorMessage }) : recentManualTasks.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-3 rounded-lg border border-outline-variant text-sm text-on-surface-variant", children: t("noTasksYet") }) : null,
       recentManualTasks.map((task) => {
         const isUpdating = updatingTaskIds.includes(task.id);
         const isUpdatingImportant = updatingImportantIds.includes(task.id);

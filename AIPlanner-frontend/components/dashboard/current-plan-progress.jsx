@@ -2,8 +2,10 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { BarChart3 } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { fetchGoals, fetchPlanByGoalId, fetchPlanProgress } from "@/lib/api";
 function CurrentPlanProgress({ refreshKey = 0 }) {
+  const { t } = useTranslation();
   const [planProgress, setPlanProgress] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -44,10 +46,10 @@ function CurrentPlanProgress({ refreshKey = 0 }) {
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsx(BarChart3, { className: "w-5 h-5 text-primary" }),
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Current Plan Progress" })
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: t("currentPlanProgress") })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
-      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading progress..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : planProgress.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No active plans yet." }) : null,
+      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: `${t("loading")}...` }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : planProgress.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: t("currentPlanProgress") }) : null,
       planProgress.map((item) => /* @__PURE__ */ jsxs(
         "div",
         {

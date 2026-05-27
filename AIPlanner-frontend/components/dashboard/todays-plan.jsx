@@ -2,6 +2,7 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Check, Lightbulb } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { completePlanTask, fetchGoals, fetchPlanByGoalId } from "@/lib/api";
 function getLocalDateKey(value = /* @__PURE__ */ new Date()) {
   if (typeof value === "string") {
@@ -26,6 +27,7 @@ function mapPlanToView(plan, progress, todayTasks) {
   };
 }
 function TodaysPlan({ refreshKey = 0 }) {
+  const { t } = useTranslation();
   const [aiPlans, setAiPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -88,10 +90,10 @@ function TodaysPlan({ refreshKey = 0 }) {
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
       /* @__PURE__ */ jsx(Lightbulb, { className: "w-5 h-5 text-primary" }),
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Today's AI Plan" })
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: t("todaysAiPlan") })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
-      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading plans..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : aiPlans.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No AI plan tasks scheduled for today." }) : null,
+      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: `${t("loading")}...` }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : aiPlans.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: t("todaysAiPlanTasks") }) : null,
       aiPlans.map((plan) => /* @__PURE__ */ jsxs(
         "div",
         {
@@ -102,7 +104,7 @@ function TodaysPlan({ refreshKey = 0 }) {
                 /* @__PURE__ */ jsx("h3", { className: "font-semibold text-on-surface group-hover:text-primary transition-colors", children: plan.title }),
                 /* @__PURE__ */ jsxs("p", { className: "text-sm text-on-surface-variant mt-1", children: [
                   plan.tasks,
-                  " tasks included"
+                  t("tasksIncluded", { count: plan.tasks }).replace(String(plan.tasks), "").trimStart()
                 ] })
               ] }),
               /* @__PURE__ */ jsx(
@@ -115,7 +117,7 @@ function TodaysPlan({ refreshKey = 0 }) {
             ] }),
             /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
               /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ jsx("span", { className: "text-xs text-on-surface-variant", children: "Progress" }),
+                /* @__PURE__ */ jsx("span", { className: "text-xs text-on-surface-variant", children: t("progress") }),
                 /* @__PURE__ */ jsxs("span", { className: "text-xs font-semibold text-on-surface", children: [
                   plan.progress,
                   "%"

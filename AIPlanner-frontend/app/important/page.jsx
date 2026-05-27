@@ -5,15 +5,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, Check, Clock, Plus, Star } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTranslation } from "@/i18n";
 import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
 function isTaskDone(task) {
   return Boolean(task.completed) || task.status === "DONE";
 }
 
-function formatDateTime(value) {
-  if (!value) return "No due date";
-  return new Date(value).toLocaleString(void 0, {
+function formatDateTime(value, locale, fallback) {
+  if (!value) return fallback;
+  return new Date(value).toLocaleString(locale, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -45,7 +46,7 @@ function statusLabel(task) {
   return task.status ?? "TODO";
 }
 
-function ImportantTaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant }) {
+function ImportantTaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant, enumLabel, dateLocale, t }) {
   const navigate = useNavigate();
   const completed = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
@@ -101,11 +102,11 @@ function ImportantTaskCard({ task, isUpdating, isUpdatingImportant, onComplete, 
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
           <span className="inline-flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />
-            {formatDateTime(task.dueDate)}
+            {formatDateTime(task.dueDate, dateLocale, t("noDueDate"))}
           </span>
           {task.category?.name ? <span className="px-2 py-1 bg-surface-container rounded">{task.category.name}</span> : null}
-          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{task.priority ?? "MEDIUM"}</span>
-          <span className="px-2 py-1 bg-surface-container rounded font-medium">{statusLabel(task)}</span>
+          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{enumLabel(task.priority ?? "MEDIUM")}</span>
+          <span className="px-2 py-1 bg-surface-container rounded font-medium">{enumLabel(statusLabel(task))}</span>
           {estimated ? (
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -119,6 +120,7 @@ function ImportantTaskCard({ task, isUpdating, isUpdatingImportant, onComplete, 
 }
 
 function ImportantContent({ onTasksChanged }) {
+  const { t, enumLabel, dateLocale } = useTranslation();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -205,22 +207,22 @@ function ImportantContent({ onTasksChanged }) {
   return (
     <section className="space-y-6">
       <PageHeader
-        title="Important"
-        subtitle="Starred tasks that need extra attention"
+        title={t("important")}
+        subtitle={t("importantSubtitle")}
         action={(
           <Link
             to="/tasks/new"
             className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            New Task
+            {t("newTask")}
           </Link>
         )}
       />
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
-          Loading important tasks...
+          {t("loading")}...
         </div>
       ) : null}
 
@@ -228,22 +230,22 @@ function ImportantContent({ onTasksChanged }) {
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error flex items-center justify-between gap-3">
           <span>{errorMessage}</span>
           <button type="button" onClick={loadTasks} className="text-xs font-semibold text-on-surface hover:underline">
-            Retry
+            {t("retry")}
           </button>
         </div>
       ) : null}
 
       {isEmpty ? (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
-          <h3 className="text-lg font-semibold text-on-surface">No important tasks yet</h3>
+          <h3 className="text-lg font-semibold text-on-surface">{t("noImportantTasks")}</h3>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Star tasks that need extra attention and they will appear here.
+            {t("importantHelp")}
           </p>
           <Link
             to="/tasks"
             className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
           >
-            Go to Tasks
+            {t("goToTasks")}
           </Link>
         </div>
       ) : null}
@@ -258,6 +260,9 @@ function ImportantContent({ onTasksChanged }) {
               isUpdatingImportant={updatingImportantIds.includes(task.id)}
               onComplete={handleCompleteTask}
               onToggleImportant={handleToggleImportant}
+              enumLabel={enumLabel}
+              dateLocale={dateLocale}
+              t={t}
             />
           ))}
         </div>

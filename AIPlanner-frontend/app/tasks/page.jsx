@@ -6,6 +6,7 @@ import { CalendarDays, Check, Clock, Plus, Search, Star } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
+import { useTranslation } from "@/i18n";
 import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
 const priorityRank = {
@@ -32,9 +33,9 @@ function isTaskDone(task) {
   return Boolean(task.completed) || task.status === "DONE";
 }
 
-function formatDateTime(value) {
-  if (!value) return "No due date";
-  return new Date(value).toLocaleString(void 0, {
+function formatDateTime(value, locale, noDueDateLabel) {
+  if (!value) return noDueDateLabel;
+  return new Date(value).toLocaleString(locale, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -72,7 +73,7 @@ function matchesStatus(task, statusFilter) {
   return !isTaskDone(task) && statusLabel(task) === statusFilter;
 }
 
-function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant }) {
+function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleImportant, enumLabel, dateLocale, t }) {
   const navigate = useNavigate();
   const done = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
@@ -130,11 +131,11 @@ function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleI
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
           <span className="inline-flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />
-            {formatDateTime(task.dueDate)}
+            {formatDateTime(task.dueDate, dateLocale, t("noDueDate"))}
           </span>
           {task.category?.name ? <span className="px-2 py-1 bg-surface-container rounded">{task.category.name}</span> : null}
-          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{task.priority ?? "MEDIUM"}</span>
-          <span className="px-2 py-1 bg-surface-container rounded font-medium">{statusLabel(task)}</span>
+          <span className={`px-2 py-1 rounded font-medium ${priorityClass(task.priority)}`}>{enumLabel(task.priority ?? "MEDIUM")}</span>
+          <span className="px-2 py-1 bg-surface-container rounded font-medium">{enumLabel(statusLabel(task))}</span>
           {estimated ? (
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -148,6 +149,7 @@ function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleI
 }
 
 function TasksContent({ onTasksChanged }) {
+  const { t, enumLabel, dateLocale } = useTranslation();
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("categoryId");
   const todayKey = useMemo(() => getLocalDateKey(), []);
@@ -289,10 +291,10 @@ function TasksContent({ onTasksChanged }) {
   };
 
   const summaryCards = [
-    { label: "Total Tasks", value: summary.total, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
-    { label: "Open Tasks", value: summary.open, variant: "orange", icon: <Clock className="h-5 w-5" /> },
-    { label: "Completed", value: summary.completed, variant: "green", icon: <Check className="h-5 w-5" /> },
-    { label: "High Priority", value: summary.highPriority, variant: "red", icon: <Star className="h-5 w-5" /> }
+    { label: t("totalTasks"), value: summary.total, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
+    { label: t("openTasks"), value: summary.open, variant: "orange", icon: <Clock className="h-5 w-5" /> },
+    { label: t("completed"), value: summary.completed, variant: "green", icon: <Check className="h-5 w-5" /> },
+    { label: t("highPriority"), value: summary.highPriority, variant: "red", icon: <Star className="h-5 w-5" /> }
   ];
 
   const hasFilters = categoryId || searchTerm.trim() || statusFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all" || sortOption !== "newest";
@@ -302,15 +304,15 @@ function TasksContent({ onTasksChanged }) {
   return (
     <section className="space-y-6">
       <PageHeader
-        title="Tasks"
-        subtitle="Manage all your manual tasks"
+        title={t("tasks")}
+        subtitle={t("manageManualTasks")}
         action={(
           <Link
             to="/tasks/new"
             className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            New Task
+            {t("newTask")}
           </Link>
         )}
       />
@@ -327,7 +329,7 @@ function TasksContent({ onTasksChanged }) {
           <input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search title or description"
+            placeholder={t("searchTitleDescription")}
             className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
           />
         </label>
@@ -336,41 +338,41 @@ function TasksContent({ onTasksChanged }) {
           onChange={(event) => setStatusFilter(event.target.value)}
           className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
         >
-          <option value="all">All statuses</option>
-          <option value="TODO">Todo</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="DONE">Done</option>
+          <option value="all">{t("allStatuses")}</option>
+          <option value="TODO">{t("todo")}</option>
+          <option value="IN_PROGRESS">{t("inProgress")}</option>
+          <option value="DONE">{t("done")}</option>
         </select>
         <select
           value={priorityFilter}
           onChange={(event) => setPriorityFilter(event.target.value)}
           className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
         >
-          <option value="all">All priorities</option>
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
+          <option value="all">{t("allPriorities")}</option>
+          <option value="LOW">{t("low")}</option>
+          <option value="MEDIUM">{t("medium")}</option>
+          <option value="HIGH">{t("high")}</option>
         </select>
         <select
           value={dateFilter}
           onChange={(event) => setDateFilter(event.target.value)}
           className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
         >
-          <option value="all">All dates</option>
-          <option value="none">No due date</option>
-          <option value="today">Due today</option>
-          <option value="upcoming">Upcoming</option>
-          <option value="overdue">Overdue</option>
+          <option value="all">{t("allDates")}</option>
+          <option value="none">{t("noDueDate")}</option>
+          <option value="today">{t("dueToday")}</option>
+          <option value="upcoming">{t("upcoming")}</option>
+          <option value="overdue">{t("overdue")}</option>
         </select>
         <select
           value={sortOption}
           onChange={(event) => setSortOption(event.target.value)}
           className="rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm outline-none focus:border-primary"
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="due">Due date</option>
-          <option value="priority">Priority</option>
+          <option value="newest">{t("newestFirst")}</option>
+          <option value="oldest">{t("oldestFirst")}</option>
+          <option value="due">{t("dueDate")}</option>
+          <option value="priority">{t("highPriority")}</option>
         </select>
       </div>
 
@@ -385,7 +387,7 @@ function TasksContent({ onTasksChanged }) {
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">
-          Loading tasks...
+          {t("loading")}...
         </div>
       ) : null}
 
@@ -393,29 +395,29 @@ function TasksContent({ onTasksChanged }) {
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error flex items-center justify-between gap-3">
           <span>{errorMessage}</span>
           <button type="button" onClick={loadTasks} className="text-xs font-semibold text-on-surface hover:underline">
-            Retry
+            {t("retry")}
           </button>
         </div>
       ) : null}
 
       {noTasks ? (
         <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant">
-          <h3 className="text-lg font-semibold text-on-surface">No tasks yet</h3>
-          <p className="mt-2 text-sm text-on-surface-variant">Create your first task to start organizing your work.</p>
+          <h3 className="text-lg font-semibold text-on-surface">{t("noTasksYet")}</h3>
+          <p className="mt-2 text-sm text-on-surface-variant">{t("createFirstTask")}</p>
           <Link
             to="/tasks/new"
             className="mt-5 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
           >
-            Create Task
+            {t("create")}
           </Link>
         </div>
       ) : null}
 
       {noFilteredResults ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex flex-col gap-3 text-sm text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
-          <span>No tasks match your filters.</span>
+          <span>{t("noTasksMatch")}</span>
           <button type="button" onClick={clearFilters} className="self-start rounded-lg bg-surface-container px-3 py-2 text-xs font-semibold text-on-surface sm:self-auto">
-            Clear filters
+            {t("clearFilters")}
           </button>
         </div>
       ) : null}
@@ -430,6 +432,9 @@ function TasksContent({ onTasksChanged }) {
               isUpdatingImportant={updatingImportantIds.includes(task.id)}
               onComplete={handleCompleteTask}
               onToggleImportant={handleToggleImportant}
+              enumLabel={enumLabel}
+              dateLocale={dateLocale}
+              t={t}
             />
           ))}
         </div>

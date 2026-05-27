@@ -3,8 +3,10 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Target, ArrowRight } from "lucide-react";
+import { useTranslation } from "@/i18n";
 import { fetchGoals } from "@/lib/api";
 function ActiveGoals({ refreshKey = 0 }) {
+  const { t } = useTranslation();
   const [activeGoals, setActiveGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -25,7 +27,7 @@ function ActiveGoals({ refreshKey = 0 }) {
               title: goal.title,
               dueDate: goal.endDate ? new Date(goal.endDate).toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "No date",
               progress,
-              status: goal.status === "COMPLETED" ? "On Track" : progress > 85 ? "At Risk" : "On Track"
+              status: goal.status === "COMPLETED" ? "onTrack" : progress > 85 ? "behind" : "onTrack"
             };
           })
         );
@@ -45,15 +47,16 @@ function ActiveGoals({ refreshKey = 0 }) {
     /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
         /* @__PURE__ */ jsx(Target, { className: "w-5 h-5 flex-shrink-0 text-primary" }),
-        /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface truncate", children: "Active Goals" })
+        /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface truncate", children: t("activeGoals") })
       ] }),
       /* @__PURE__ */ jsxs(Link, { to: "/goals", className: "text-primary font-medium text-sm inline-flex flex-shrink-0 items-center gap-1 hover:gap-2 transition-all", children: [
-        "View all ",
+        t("viewAll"),
+        " ",
         /* @__PURE__ */ jsx(ArrowRight, { className: "w-4 h-4" })
       ] })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "space-y-3 w-full min-w-0", children: [
-      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading goals..." }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : activeGoals.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "No goals yet." }) : null,
+      isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: `${t("loading")}...` }) : errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : activeGoals.length === 0 ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: t("noGoalsYet") }) : null,
       activeGoals.map((goal) => /* @__PURE__ */ jsxs(
         Link,
         {
@@ -72,8 +75,8 @@ function ActiveGoals({ refreshKey = 0 }) {
               /* @__PURE__ */ jsx(
                 "span",
                 {
-                  className: `flex-shrink-0 whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${goal.status === "On Track" ? "bg-green-100/50 text-green-700 dark:bg-green-900/30 dark:text-green-300" : goal.status === "At Risk" ? "bg-orange-100/50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" : "bg-error-container/30 text-error"}`,
-                  children: goal.status
+                  className: `flex-shrink-0 whitespace-nowrap px-2 py-1 rounded text-xs font-medium ${goal.status === "onTrack" ? "bg-green-100/50 text-green-700 dark:bg-green-900/30 dark:text-green-300" : goal.status === "behind" ? "bg-orange-100/50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" : "bg-error-container/30 text-error"}`,
+                  children: t(goal.status)
                 }
               )
             ] }),
