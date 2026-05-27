@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Check, ChevronDown, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { languageOptions, useTranslation } from "@/i18n";
-import { getStoredUser, logout } from "@/lib/api";
+import { getStoredUser, logout, USER_UPDATED_EVENT } from "@/lib/api";
 
 function getInitials(user) {
   const source = user?.name || user?.username || user?.email || "Account";
@@ -21,7 +21,7 @@ function Header({ title }) {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useTranslation();
   const navigate = useNavigate();
-  const user = getStoredUser();
+  const [user, setUser] = useState(getStoredUser);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const languageRef = useRef(null);
@@ -45,6 +45,10 @@ function Header({ title }) {
   const accountName = user?.name || user?.username || t("account");
 
   useEffect(() => {
+    function handleUserUpdated(event) {
+      setUser(event.detail ?? getStoredUser());
+    }
+
     function handlePointerDown(event) {
       if (!languageRef.current?.contains(event.target)) {
         setIsLanguageOpen(false);
@@ -62,9 +66,11 @@ function Header({ title }) {
       }
     }
 
+    window.addEventListener(USER_UPDATED_EVENT, handleUserUpdated);
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
+      window.removeEventListener(USER_UPDATED_EVENT, handleUserUpdated);
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };

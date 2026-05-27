@@ -9,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(exception.getMessage(), null));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<String>> handleResponseStatusException(
+            ResponseStatusException exception
+    ) {
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(ApiResponse.error(exception.getReason(), null));
     }
 
     @ExceptionHandler(Exception.class)

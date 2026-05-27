@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "@/i18n";
-import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser } from "@/lib/api";
+import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser, USER_UPDATED_EVENT } from "@/lib/api";
 const fallbackCategoryColor = "#64748B";
 function getCategoryColor(color) {
   if (typeof color !== "string") return fallbackCategoryColor;
@@ -33,7 +33,17 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
     { icon: /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5" }), labelKey: "tasks", count: 0, path: "/tasks" }
   ]);
   const [categories, setCategories] = useState([]);
-  const user = getStoredUser();
+  const [user, setUser] = useState(getStoredUser);
+  useEffect(() => {
+    function handleUserUpdated(event) {
+      setUser(event.detail ?? getStoredUser());
+    }
+
+    window.addEventListener(USER_UPDATED_EVENT, handleUserUpdated);
+    return () => {
+      window.removeEventListener(USER_UPDATED_EVENT, handleUserUpdated);
+    };
+  }, []);
   useEffect(() => {
     let isMounted = true;
     async function loadSidebarData() {

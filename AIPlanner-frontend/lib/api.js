@@ -9,6 +9,7 @@ class ApiError extends Error {
 const ACCESS_TOKEN_KEY = "AI_PLANNER_AUTH_TOKEN";
 const REFRESH_TOKEN_KEY = "AI_PLANNER_REFRESH_TOKEN";
 const USER_KEY = "AI_PLANNER_USER";
+const USER_UPDATED_EVENT = "ai-planner-user-updated";
 const BACKEND_BASE_URL = (import.meta.env.VITE_BACKEND_URL ?? "").replace(/\/$/, "");
 function getStoredAccessToken() {
   if (typeof window === "undefined") return null;
@@ -31,17 +32,26 @@ function getStoredUser() {
     return null;
   }
 }
+function setStoredUser(user) {
+  if (typeof window === "undefined") return;
+  if (!user) {
+    localStorage.removeItem(USER_KEY);
+  } else {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+  window.dispatchEvent(new CustomEvent(USER_UPDATED_EVENT, { detail: user }));
+}
 function storeAuth(payload) {
   if (typeof window === "undefined") return;
   localStorage.setItem(ACCESS_TOKEN_KEY, payload.accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, payload.refreshToken);
-  localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+  setStoredUser(payload.user);
 }
 function clearAuth() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  setStoredUser(null);
 }
 function buildApiUrl(path) {
   const endpoint = path.startsWith("/") ? path : `/${path}`;
@@ -162,6 +172,17 @@ async function logout() {
   }
   clearAuth();
 }
+async function getCurrentUser() {
+  return requestJson("/api/users/me");
+}
+async function updateCurrentUserProfile(input) {
+  const user = await requestJson("/api/users/me", {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+  setStoredUser(user);
+  return user;
+}
 async function fetchTasks(size = 20) {
   return requestJson(`/api/tasks?size=${size}`);
 }
@@ -280,13 +301,17 @@ export {
   fetchTasks,
   fetchTasksWithParams,
   generateAiPlan,
+  getCurrentUser,
   getStoredUser,
   isAuthenticated,
   login,
   logout,
   register,
+  setStoredUser,
   storeAuth,
+  USER_UPDATED_EVENT,
   updateCategory,
+  updateCurrentUserProfile,
   updateTaskImportant,
   updateTask
 };
