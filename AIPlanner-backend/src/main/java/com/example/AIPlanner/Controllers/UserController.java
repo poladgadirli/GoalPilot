@@ -1,15 +1,17 @@
 package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.CurrentUserService;
+import com.example.AIPlanner.Abstracts.Services.AuthService;
+import com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
 import com.example.AIPlanner.DTOs.Requests.Users.UpdateUserProfileRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.UserResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.Entities.User;
 import com.example.AIPlanner.Repositories.UserRepository;
 import jakarta.validation.Valid;
-import main.java.com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final CurrentUserService currentUserService;
+    private final AuthService authService;
     private final UserRepository userRepository;
 
-    public UserController(CurrentUserService currentUserService, UserRepository userRepository) {
+    public UserController(CurrentUserService currentUserService, AuthService authService, UserRepository userRepository) {
         this.currentUserService = currentUserService;
+        this.authService = authService;
         this.userRepository = userRepository;
     }
 
@@ -76,7 +80,7 @@ public class UserController {
 
     @PutMapping("/me/password")
     public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(request);
+        authService.changePassword(request);
 
         return ApiResponse.success("Password changed successfully", null);
     }

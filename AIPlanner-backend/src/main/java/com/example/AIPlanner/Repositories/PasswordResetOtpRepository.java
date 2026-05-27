@@ -1,4 +1,4 @@
-package main.java.com.example.AIPlanner.Repositories;
+package com.example.AIPlanner.Repositories;
 
 import com.example.AIPlanner.Entities.PasswordResetOtp;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +11,6 @@ public interface PasswordResetOtpRepository extends JpaRepository<PasswordResetO
             String email,
             String code
     );
+
+    void deleteByEmailAndUsedFalse(String email);
 }

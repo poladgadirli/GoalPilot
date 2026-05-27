@@ -1,4 +1,4 @@
-package main.java.com.example.AIPlanner.DTOs.Requests.Auth;
+package com.example.AIPlanner.DTOs.Requests.Auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

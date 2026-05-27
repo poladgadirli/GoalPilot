@@ -1,4 +1,4 @@
-package main.java.com.example.AIPlanner.Entities;
+package com.example.AIPlanner.Entities;
 
 import com.example.AIPlanner.Entities.Common.BaseEntity;
 import jakarta.persistence.*;

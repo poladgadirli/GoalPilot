@@ -153,10 +153,28 @@ async function login(email, password) {
     body: JSON.stringify({ identifier: email, password })
   });
 }
-async function register(name, username, email, password) {
+async function register(name, username, email, password, confirmPassword = password) {
   return requestJson("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ name, username, email, password })
+    body: JSON.stringify({ name, username, email, password, confirmPassword })
+  });
+}
+async function forgotPassword(email) {
+  return requestJson("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email })
+  });
+}
+async function verifyResetOtp(email, code) {
+  return requestJson("/api/auth/verify-reset-otp", {
+    method: "POST",
+    body: JSON.stringify({ email, code })
+  });
+}
+async function resetPassword(email, code, newPassword, confirmNewPassword) {
+  return requestJson("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ email, code, newPassword, confirmNewPassword })
   });
 }
 async function logout() {
@@ -306,6 +324,7 @@ export {
   fetchTaskById,
   fetchTasks,
   fetchTasksWithParams,
+  forgotPassword,
   generateAiPlan,
   getCurrentUser,
   getStoredUser,
@@ -313,6 +332,7 @@ export {
   login,
   logout,
   register,
+  resetPassword,
   setPlanTaskCompletion,
   setStoredUser,
   storeAuth,
@@ -320,5 +340,6 @@ export {
   updateCategory,
   updateCurrentUserProfile,
   updateTaskImportant,
-  updateTask
+  updateTask,
+  verifyResetOtp
 };

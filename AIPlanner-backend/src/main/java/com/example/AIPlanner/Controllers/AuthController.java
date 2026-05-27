@@ -1,10 +1,13 @@
 package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.AuthService;
+import com.example.AIPlanner.DTOs.Requests.Auth.ForgotPasswordRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.LoginRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.LogoutRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RefreshTokenRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RegisterRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.ResetPasswordRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.VerifyResetOtpRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.AuthResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import jakarta.validation.Valid;
@@ -46,5 +49,26 @@ public class AuthController {
         authService.logout(request);
 
         return ApiResponse.success("Logged out successfully", null);
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+
+        return ApiResponse.success("Password reset code sent successfully", null);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ApiResponse<Void> verifyResetOtp(@Valid @RequestBody VerifyResetOtpRequest request) {
+        authService.verifyResetOtp(request);
+
+        return ApiResponse.success("Reset code verified successfully", null);
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+
+        return ApiResponse.success("Password reset successfully", null);
     }
 }

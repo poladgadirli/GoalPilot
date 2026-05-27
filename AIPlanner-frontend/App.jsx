@@ -2,6 +2,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import SignUpPage from "@/app/page";
 import LoginPage from "@/app/login/page";
+import ForgotPasswordPage from "@/app/forgot-password/page";
 import DashboardPage from "@/app/dashboard/page";
 import MyDayPage from "@/app/my-day/page";
 import ImportantPage from "@/app/important/page";
@@ -43,6 +44,7 @@ function App() {
   return /* @__PURE__ */ jsx(BrowserRouter, { children: /* @__PURE__ */ jsxs(Routes, { children: [
     /* @__PURE__ */ jsx(Route, { path: "/", element: /* @__PURE__ */ jsx(RootRoute, {}) }),
     /* @__PURE__ */ jsx(Route, { path: "/login", element: /* @__PURE__ */ jsx(LoginPage, {}) }),
+    /* @__PURE__ */ jsx(Route, { path: "/forgot-password", element: /* @__PURE__ */ jsx(ForgotPasswordPage, {}) }),
     /* @__PURE__ */ jsx(Route, { path: "/dashboard", element: protectedElement(/* @__PURE__ */ jsx(DashboardPage, {})) }),
     /* @__PURE__ */ jsx(Route, { path: "/my-day", element: protectedElement(/* @__PURE__ */ jsx(MyDayPage, {})) }),
     /* @__PURE__ */ jsx(Route, { path: "/important", element: protectedElement(/* @__PURE__ */ jsx(ImportantPage, {})) }),

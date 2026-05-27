@@ -1,23 +1,32 @@
 package com.example.AIPlanner.Services;
 
 import com.example.AIPlanner.Abstracts.Services.AuthService;
+import com.example.AIPlanner.Abstracts.Services.CurrentUserService;
+import com.example.AIPlanner.Abstracts.Services.EmailService;
 import com.example.AIPlanner.Abstracts.Services.RefreshTokenService;
+import com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.ForgotPasswordRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.LoginRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.LogoutRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RefreshTokenRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RegisterRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.ResetPasswordRequest;
+import com.example.AIPlanner.DTOs.Requests.Auth.VerifyResetOtpRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.AuthResponse;
 import com.example.AIPlanner.DTOs.Responses.Auth.UserResponse;
 import com.example.AIPlanner.Entities.Category;
+import com.example.AIPlanner.Entities.PasswordResetOtp;
 import com.example.AIPlanner.Entities.RefreshToken;
 import com.example.AIPlanner.Entities.User;
-import main.java.com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
-
 import com.example.AIPlanner.Repositories.CategoryRepository;
+import com.example.AIPlanner.Repositories.PasswordResetOtpRepository;
 import com.example.AIPlanner.Repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -35,19 +44,28 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final CurrentUserService currentUserService;
+    private final PasswordResetOtpRepository passwordResetOtpRepository;
+    private final EmailService emailService;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             CategoryRepository categoryRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            RefreshTokenService refreshTokenService
+            RefreshTokenService refreshTokenService,
+            CurrentUserService currentUserService,
+            PasswordResetOtpRepository passwordResetOtpRepository,
+            EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.currentUserService = currentUserService;
+        this.passwordResetOtpRepository = passwordResetOtpRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -182,5 +200,61 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (!userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("User with this email does not exist");
+        }
+
+        String code = String.format("%06d", ThreadLocalRandom.current().nextInt(1_000_000));
+        PasswordResetOtp otp = new PasswordResetOtp(email, code, LocalDateTime.now().plusMinutes(10));
+
+        passwordResetOtpRepository.deleteByEmailAndUsedFalse(email);
+        passwordResetOtpRepository.save(otp);
+        emailService.sendPasswordResetOtp(email, code);
+    }
+
+    @Override
+    public void verifyResetOtp(VerifyResetOtpRequest request) {
+        getValidPasswordResetOtp(request.getEmail(), request.getCode());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New passwords do not match");
+        }
+
+        PasswordResetOtp otp = getValidPasswordResetOtp(request.getEmail(), request.getCode());
+        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
+                .orElseThrow(() -> new IllegalArgumentException("User with this email does not exist"));
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        otp.markAsUsed();
+        passwordResetOtpRepository.save(otp);
+    }
+
+    private PasswordResetOtp getValidPasswordResetOtp(String email, String code) {
+        PasswordResetOtp otp = passwordResetOtpRepository
+                .findTopByEmailAndCodeAndUsedFalseOrderByCreatedAtDesc(email.trim().toLowerCase(), code)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset code"));
+
+        if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Invalid or expired reset code");
+        }
+
+        return otp;
     }
 }

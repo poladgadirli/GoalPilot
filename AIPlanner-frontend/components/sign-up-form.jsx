@@ -51,7 +51,7 @@ function SignUpForm({ formRef }) {
     try {
       const usernameBase = email.split("@")[0]?.replace(/[^a-zA-Z0-9._-]/g, "") || fullName.replace(/\s+/g, "");
       const username = usernameBase.length >= 3 ? usernameBase.slice(0, 30) : `${usernameBase}user`.slice(0, 30);
-      const response = await register(fullName, username, email, password);
+      const response = await register(fullName, username, email, password, confirmPassword);
       storeAuth(response);
       setIsSuccess(true);
       setTimeout(() => {

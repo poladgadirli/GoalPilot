@@ -111,7 +111,7 @@ function LoginPage() {
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx("a", { href: "#", className: "text-primary text-sm font-medium hover:underline", children: "Forgot password?" }) }),
+        /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx(Link, { to: "/forgot-password", className: "text-primary text-sm font-medium hover:underline", children: "Forgot password?" }) }),
         errorMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-error mt-2", children: errorMessage }) : null,
         /* @__PURE__ */ jsx(
           "button",
