@@ -11,6 +11,8 @@ import com.example.AIPlanner.DTOs.Responses.Auth.UserResponse;
 import com.example.AIPlanner.Entities.Category;
 import com.example.AIPlanner.Entities.RefreshToken;
 import com.example.AIPlanner.Entities.User;
+import main.java.com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
+
 import com.example.AIPlanner.Repositories.CategoryRepository;
 import com.example.AIPlanner.Repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -159,5 +161,26 @@ public class AuthServiceImpl implements AuthService {
 
             categoryRepository.save(category);
         }
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        User user = currentUserService.getCurrentUser();
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new IllegalArgumentException("New passwords do not match");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        userRepository.save(user);
     }
 }
