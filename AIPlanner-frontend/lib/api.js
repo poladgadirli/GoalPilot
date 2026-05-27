@@ -177,6 +177,12 @@ async function resetPassword(email, code, newPassword, confirmNewPassword) {
     body: JSON.stringify({ email, code, newPassword, confirmNewPassword })
   });
 }
+async function changePassword(currentPassword, newPassword, confirmNewPassword) {
+  return requestJson("/api/users/me/password", {
+    method: "PUT",
+    body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword })
+  });
+}
 async function logout() {
   const refreshToken = getStoredRefreshToken();
   if (refreshToken) {
@@ -333,6 +339,7 @@ export {
   logout,
   register,
   resetPassword,
+  changePassword,
   setPlanTaskCompletion,
   setStoredUser,
   storeAuth,

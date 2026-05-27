@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { useTheme } from "@/components/theme-provider";
 import { languageOptions, useTranslation } from "@/i18n";
-import { ApiError, getCurrentUser, getStoredUser, setStoredUser, updateCurrentUserProfile } from "@/lib/api";
+import { ApiError, getCurrentUser, getStoredUser, setStoredUser, updateCurrentUserProfile, changePassword, forgotPassword, verifyResetOtp, resetPassword } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const emptyProfile = {
   name: "",
@@ -37,6 +38,25 @@ function SettingsContent() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
+  const { toast } = useToast();
+
+  // Security state
+  const [securityMode, setSecurityMode] = useState("current"); // 'current' | 'otp'
+
+  // Change with current password
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState("");
+
+  // OTP reset flow
+  const [otpStep, setOtpStep] = useState(1); // 1: send, 2: verify, 3: reset
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpError, setOtpError] = useState("");
   const themeOptions = [
     { value: "light", label: t("light") },
     { value: "dark", label: t("dark") }
@@ -90,6 +110,16 @@ function SettingsContent() {
       username: profile.username ?? "",
       email: profile.email ?? ""
     });
+  };
+
+  const clearAllSecurityFields = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setOtpStep(1);
+    setOtpCode("");
+    setChangePasswordError("");
+    setOtpError("");
   };
 
   const handleProfileSubmit = async (event) => {
@@ -255,6 +285,291 @@ function SettingsContent() {
           </button>
         </div>
       </form>
+
+      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 space-y-5">
+        <h3 className="font-semibold text-on-surface">{t("security")}</h3>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => { setSecurityMode("current"); clearAllSecurityFields(); }}
+            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+              securityMode === "current"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high"
+            }`}
+            aria-pressed={securityMode === "current"}
+          >
+            {t("changeWithCurrent")}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSecurityMode("otp"); clearAllSecurityFields(); }}
+            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+              securityMode === "otp"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high"
+            }`}
+            aria-pressed={securityMode === "otp"}
+          >
+            {t("resetWithOtp")}
+          </button>
+        </div>
+
+        {securityMode === "current" ? (
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            setChangePasswordError("");
+
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+              setChangePasswordError(t("allFieldsRequired") || "All fields are required");
+              return;
+            }
+            if (newPassword.length < 6) {
+              setChangePasswordError(t("passwordTooShort") || "New password must be at least 6 characters");
+              return;
+            }
+            if (newPassword !== confirmNewPassword) {
+              setChangePasswordError(t("passwordsDoNotMatch") || "Passwords do not match");
+              return;
+            }
+
+            setIsChangingPassword(true);
+            try {
+              await changePassword(currentPassword, newPassword, confirmNewPassword);
+              clearAllSecurityFields();
+              toast({ title: t("passwordChanged") || "Password changed", description: t("passwordChangedSuccess") || "Your password was updated." });
+            } catch (error) {
+              const message = error instanceof ApiError ? error.message : (error?.message ?? t("passwordChangeFailed"));
+              setChangePasswordError(message);
+            } finally {
+              setIsChangingPassword(false);
+            }
+          }} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="space-y-2 md:col-span-2">
+                <span className="text-sm font-semibold text-on-surface">{t("currentPassword")}</span>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  disabled={isChangingPassword}
+                  autoComplete="current-password"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-on-surface">{t("newPassword")}</span>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  disabled={isChangingPassword}
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-on-surface">{t("confirmNewPassword")}</span>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  disabled={isChangingPassword}
+                  autoComplete="new-password"
+                />
+              </label>
+            </div>
+
+            {changePasswordError ? (
+              <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{changePasswordError}</p>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isChangingPassword ? `${t("changing")}...` : t("changePassword")}
+              </button>
+              <button
+                type="button"
+                onClick={clearAllSecurityFields}
+                disabled={isChangingPassword}
+                className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            {otpStep === 1 ? (
+              <div className="space-y-3">
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-on-surface">{t("email")}</span>
+                  <input
+                    type="email"
+                    value={formValues.email}
+                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant opacity-80"
+                    disabled
+                    readOnly
+                  />
+                </label>
+
+                {otpError ? (
+                  <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{otpError}</p>
+                ) : null}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setOtpError("");
+                      setIsSendingOtp(true);
+                      try {
+                        await forgotPassword(formValues.email);
+                        setOtpStep(2);
+                        toast({ title: t("otpSent") || "OTP sent", description: t("checkEmailForOtp") || "Check your email for the OTP code." });
+                      } catch (error) {
+                        setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("otpSendFailed")));
+                      } finally {
+                        setIsSendingOtp(false);
+                      }
+                    }}
+                    disabled={isSendingOtp}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSendingOtp ? `${t("sending")}...` : t("sendOtp")}
+                  </button>
+                </div>
+              </div>
+            ) : otpStep === 2 ? (
+              <div className="space-y-3">
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-on-surface">{t("otpCode")}</span>
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, "").slice(0,6))}
+                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    disabled={isVerifyingOtp}
+                  />
+                </label>
+
+                {otpError ? (
+                  <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{otpError}</p>
+                ) : null}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setOtpError("");
+                      if (!/^[0-9]{6}$/.test(otpCode)) {
+                        setOtpError(t("otpInvalid") || "OTP must be 6 digits");
+                        return;
+                      }
+                      setIsVerifyingOtp(true);
+                      try {
+                        await verifyResetOtp(formValues.email, otpCode);
+                        setOtpStep(3);
+                        toast({ title: t("otpVerified") || "OTP verified", description: t("enterNewPassword") || "Enter your new password." });
+                      } catch (error) {
+                        setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("otpVerifyFailed")));
+                      } finally {
+                        setIsVerifyingOtp(false);
+                      }
+                    }}
+                    disabled={isVerifyingOtp}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isVerifyingOtp ? `${t("verifying")}...` : t("verifyOtp")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setOtpError("");
+                if (newPassword.length < 6) {
+                  setOtpError(t("passwordTooShort") || "New password must be at least 6 characters");
+                  return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                  setOtpError(t("passwordsDoNotMatch") || "Passwords do not match");
+                  return;
+                }
+                setIsResettingPassword(true);
+                try {
+                  await resetPassword(formValues.email, otpCode, newPassword, confirmNewPassword);
+                  clearAllSecurityFields();
+                  toast({ title: t("passwordReset") || "Password reset", description: t("passwordResetSuccess") || "Your password has been reset." });
+                } catch (error) {
+                  setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("passwordResetFailed")));
+                } finally {
+                  setIsResettingPassword(false);
+                }
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-sm font-semibold text-on-surface">{t("email")}</span>
+                    <input
+                      type="email"
+                      value={formValues.email}
+                      className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface-variant opacity-80"
+                      disabled
+                      readOnly
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-on-surface">{t("newPassword")}</span>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      disabled={isResettingPassword}
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-semibold text-on-surface">{t("confirmNewPassword")}</span>
+                    <input
+                      type="password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      disabled={isResettingPassword}
+                      autoComplete="new-password"
+                    />
+                  </label>
+                </div>
+
+                {otpError ? (
+                  <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{otpError}</p>
+                ) : null}
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={isResettingPassword}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isResettingPassword ? `${t("resetting")}...` : t("resetPassword")}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
