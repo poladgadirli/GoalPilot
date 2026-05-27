@@ -5,8 +5,9 @@ import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { useTheme } from "@/components/theme-provider";
 import { languageOptions, useTranslation } from "@/i18n";
-import { ApiError, getCurrentUser, getStoredUser, setStoredUser, updateCurrentUserProfile, changePassword, forgotPassword, verifyResetOtp, resetPassword } from "@/lib/api";
+import { ApiError, getCurrentUser, getStoredUser, setStoredUser, updateCurrentUserProfile, changePassword, forgotPassword, resetPassword } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const emptyProfile = {
   name: "",
@@ -50,10 +51,9 @@ function SettingsContent() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [changePasswordError, setChangePasswordError] = useState("");
 
-  // OTP reset flow
-  const [otpStep, setOtpStep] = useState(1); // 1: send, 2: verify, 3: reset
+  // Reset flow
+  const [resetStep, setResetStep] = useState(1); // 1: send code, 2: enter code+password
   const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -116,7 +116,7 @@ function SettingsContent() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
-    setOtpStep(1);
+    setResetStep(1);
     setOtpCode("");
     setChangePasswordError("");
     setOtpError("");
@@ -287,131 +287,116 @@ function SettingsContent() {
       </form>
 
       <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 space-y-5">
-        <h3 className="font-semibold text-on-surface">{t("security")}</h3>
+        <h3 className="font-semibold text-on-surface">Security</h3>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => { setSecurityMode("current"); clearAllSecurityFields(); }}
-            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-              securityMode === "current"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high"
-            }`}
-            aria-pressed={securityMode === "current"}
-          >
-            {t("changeWithCurrent")}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setSecurityMode("otp"); clearAllSecurityFields(); }}
-            className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
-              securityMode === "otp"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high"
-            }`}
-            aria-pressed={securityMode === "otp"}
-          >
-            {t("resetWithOtp")}
-          </button>
-        </div>
-
-        {securityMode === "current" ? (
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            setChangePasswordError("");
-
-            if (!currentPassword || !newPassword || !confirmNewPassword) {
-              setChangePasswordError(t("allFieldsRequired") || "All fields are required");
-              return;
-            }
-            if (newPassword.length < 6) {
-              setChangePasswordError(t("passwordTooShort") || "New password must be at least 6 characters");
-              return;
-            }
-            if (newPassword !== confirmNewPassword) {
-              setChangePasswordError(t("passwordsDoNotMatch") || "Passwords do not match");
-              return;
-            }
-
-            setIsChangingPassword(true);
-            try {
-              await changePassword(currentPassword, newPassword, confirmNewPassword);
-              clearAllSecurityFields();
-              toast({ title: t("passwordChanged") || "Password changed", description: t("passwordChangedSuccess") || "Your password was updated." });
-            } catch (error) {
-              const message = error instanceof ApiError ? error.message : (error?.message ?? t("passwordChangeFailed"));
-              setChangePasswordError(message);
-            } finally {
-              setIsChangingPassword(false);
-            }
-          }} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <label className="space-y-2 md:col-span-2">
-                <span className="text-sm font-semibold text-on-surface">{t("currentPassword")}</span>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  disabled={isChangingPassword}
-                  autoComplete="current-password"
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-on-surface">{t("newPassword")}</span>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  disabled={isChangingPassword}
-                  autoComplete="new-password"
-                />
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-sm font-semibold text-on-surface">{t("confirmNewPassword")}</span>
-                <input
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  disabled={isChangingPassword}
-                  autoComplete="new-password"
-                />
-              </label>
-            </div>
-
-            {changePasswordError ? (
-              <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{changePasswordError}</p>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isChangingPassword ? `${t("changing")}...` : t("changePassword")}
-              </button>
-              <button
-                type="button"
-                onClick={clearAllSecurityFields}
-                disabled={isChangingPassword}
-                className="rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {t("cancel")}
-              </button>
-            </div>
-          </form>
-        ) : (
+        {/* Change password (default) */}
+        {!securityMode || securityMode === "current" ? (
           <div className="space-y-4">
-            {otpStep === 1 ? (
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setChangePasswordError("");
+
+              if (!currentPassword || !newPassword || !confirmNewPassword) {
+                setChangePasswordError("All fields are required");
+                return;
+              }
+              if (newPassword.length < 6) {
+                setChangePasswordError("New password must be at least 6 characters");
+                return;
+              }
+              if (newPassword !== confirmNewPassword) {
+                setChangePasswordError("Passwords do not match");
+                return;
+              }
+
+              setIsChangingPassword(true);
+              try {
+                await changePassword(currentPassword, newPassword, confirmNewPassword);
+                clearAllSecurityFields();
+                toast({ title: "Password changed", description: "Your password was updated." });
+              } catch (error) {
+                const message = error instanceof ApiError ? error.message : (error?.message ?? "Failed to change password");
+                setChangePasswordError(message);
+              } finally {
+                setIsChangingPassword(false);
+              }
+            }} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <label className="space-y-2 md:col-span-2">
+                  <span className="text-sm font-semibold text-on-surface">Current password</span>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    disabled={isChangingPassword}
+                    autoComplete="current-password"
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-on-surface">New password</span>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    disabled={isChangingPassword}
+                    autoComplete="new-password"
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-on-surface">Confirm new password</span>
+                  <input
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    disabled={isChangingPassword}
+                    autoComplete="new-password"
+                  />
+                </label>
+              </div>
+
+              {changePasswordError ? (
+                <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{changePasswordError}</p>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isChangingPassword ? `Changing...` : "Change password"}
+                </button>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => { setSecurityMode("reset"); setResetStep(1); setOtpError(""); }}
+                  disabled={isChangingPassword}
+                  className="mt-2 text-sm text-on-surface-variant underline hover:text-on-surface"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+
+        {/* Reset password flow */}
+        {securityMode === "reset" ? (
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-on-surface">Reset password</h4>
+            <p className="text-sm text-on-surface-variant">We will send a verification code to this email.</p>
+
+            {resetStep === 1 ? (
               <div className="space-y-3">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-on-surface">{t("email")}</span>
+                  <span className="text-sm font-semibold text-on-surface">Email</span>
                   <input
                     type="email"
                     value={formValues.email}
@@ -433,10 +418,10 @@ function SettingsContent() {
                       setIsSendingOtp(true);
                       try {
                         await forgotPassword(formValues.email);
-                        setOtpStep(2);
-                        toast({ title: t("otpSent") || "OTP sent", description: t("checkEmailForOtp") || "Check your email for the OTP code." });
+                        setResetStep(2);
+                        toast({ title: "Code sent", description: "Check your email for the verification code." });
                       } catch (error) {
-                        setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("otpSendFailed")));
+                        setOtpError(error instanceof ApiError ? error.message : (error?.message ?? "Failed to send code"));
                       } finally {
                         setIsSendingOtp(false);
                       }
@@ -444,51 +429,15 @@ function SettingsContent() {
                     disabled={isSendingOtp}
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isSendingOtp ? `${t("sending")}...` : t("sendOtp")}
+                    {isSendingOtp ? `Sending...` : "Send code"}
                   </button>
-                </div>
-              </div>
-            ) : otpStep === 2 ? (
-              <div className="space-y-3">
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold text-on-surface">{t("otpCode")}</span>
-                  <input
-                    type="text"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, "").slice(0,6))}
-                    className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    disabled={isVerifyingOtp}
-                  />
-                </label>
 
-                {otpError ? (
-                  <p className="rounded-lg border border-error/30 bg-error-container/30 px-3 py-2 text-sm font-medium text-error">{otpError}</p>
-                ) : null}
-
-                <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={async () => {
-                      setOtpError("");
-                      if (!/^[0-9]{6}$/.test(otpCode)) {
-                        setOtpError(t("otpInvalid") || "OTP must be 6 digits");
-                        return;
-                      }
-                      setIsVerifyingOtp(true);
-                      try {
-                        await verifyResetOtp(formValues.email, otpCode);
-                        setOtpStep(3);
-                        toast({ title: t("otpVerified") || "OTP verified", description: t("enterNewPassword") || "Enter your new password." });
-                      } catch (error) {
-                        setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("otpVerifyFailed")));
-                      } finally {
-                        setIsVerifyingOtp(false);
-                      }
-                    }}
-                    disabled={isVerifyingOtp}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => { setSecurityMode("current"); clearAllSecurityFields(); }}
+                    className="text-sm text-on-surface-variant underline hover:text-on-surface"
                   >
-                    {isVerifyingOtp ? `${t("verifying")}...` : t("verifyOtp")}
+                    Back to change password
                   </button>
                 </div>
               </div>
@@ -496,28 +445,34 @@ function SettingsContent() {
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 setOtpError("");
+                if (!/^[0-9]{6}$/.test(otpCode)) {
+                  setOtpError("Verification code must be 6 digits");
+                  return;
+                }
                 if (newPassword.length < 6) {
-                  setOtpError(t("passwordTooShort") || "New password must be at least 6 characters");
+                  setOtpError("New password must be at least 6 characters");
                   return;
                 }
                 if (newPassword !== confirmNewPassword) {
-                  setOtpError(t("passwordsDoNotMatch") || "Passwords do not match");
+                  setOtpError("Passwords do not match");
                   return;
                 }
+
                 setIsResettingPassword(true);
                 try {
                   await resetPassword(formValues.email, otpCode, newPassword, confirmNewPassword);
                   clearAllSecurityFields();
-                  toast({ title: t("passwordReset") || "Password reset", description: t("passwordResetSuccess") || "Your password has been reset." });
+                  setSecurityMode("current");
+                  toast({ title: "Password reset", description: "Your password has been reset." });
                 } catch (error) {
-                  setOtpError(error instanceof ApiError ? error.message : (error?.message ?? t("passwordResetFailed")));
+                  setOtpError(error instanceof ApiError ? error.message : (error?.message ?? "Failed to reset password"));
                 } finally {
                   setIsResettingPassword(false);
                 }
               }} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <label className="space-y-2 md:col-span-2">
-                    <span className="text-sm font-semibold text-on-surface">{t("email")}</span>
+                    <span className="text-sm font-semibold text-on-surface">Email</span>
                     <input
                       type="email"
                       value={formValues.email}
@@ -527,8 +482,29 @@ function SettingsContent() {
                     />
                   </label>
 
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-sm font-semibold text-on-surface">Verification code</span>
+                    <InputOTP
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(value) => setOtpCode(value.replace(/\D/g, "").slice(0, 6))}
+                      disabled={isResettingPassword}
+                      containerClassName="justify-center gap-2"
+                      className="!w-auto"
+                    >
+                      <InputOTPGroup className="gap-2">
+                        <InputOTPSlot index={0} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                        <InputOTPSlot index={1} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                        <InputOTPSlot index={2} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                        <InputOTPSlot index={3} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                        <InputOTPSlot index={4} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                        <InputOTPSlot index={5} className="h-11 w-11 rounded-lg border border-outline-variant bg-surface-container-low text-base" />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </label>
+
                   <label className="space-y-2">
-                    <span className="text-sm font-semibold text-on-surface">{t("newPassword")}</span>
+                    <span className="text-sm font-semibold text-on-surface">New password</span>
                     <input
                       type="password"
                       value={newPassword}
@@ -540,7 +516,7 @@ function SettingsContent() {
                   </label>
 
                   <label className="space-y-2">
-                    <span className="text-sm font-semibold text-on-surface">{t("confirmNewPassword")}</span>
+                    <span className="text-sm font-semibold text-on-surface">Confirm new password</span>
                     <input
                       type="password"
                       value={confirmNewPassword}
@@ -562,13 +538,21 @@ function SettingsContent() {
                     disabled={isResettingPassword}
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isResettingPassword ? `${t("resetting")}...` : t("resetPassword")}
+                    {isResettingPassword ? `Resetting...` : "Reset password"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setSecurityMode("current"); clearAllSecurityFields(); }}
+                    className="text-sm text-on-surface-variant underline hover:text-on-surface"
+                  >
+                    Back to change password
                   </button>
                 </div>
               </form>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
