@@ -1,11 +1,31 @@
 "use client";
-import { jsx, jsxs } from "react/jsx-runtime";
-import { Bell, History, Moon, Sun } from "lucide-react";
+
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Check, ChevronDown, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
-import { useTranslation } from "@/i18n";
+import { languageOptions, useTranslation } from "@/i18n";
+import { getStoredUser, logout } from "@/lib/api";
+
+function getInitials(user) {
+  const source = user?.name || user?.username || user?.email || "Account";
+  return source
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "A";
+}
+
 function Header({ title }) {
   const { theme, toggleTheme } = useTheme();
-  const { t } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
+  const navigate = useNavigate();
+  const user = getStoredUser();
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const languageRef = useRef(null);
+  const accountRef = useRef(null);
   const isDark = theme === "dark";
   const titleMap = {
     Dashboard: "dashboard",
@@ -22,26 +42,145 @@ function Header({ title }) {
     "Goal Details": "goalDetails"
   };
   const displayTitle = titleMap[title] ? t(titleMap[title]) : title;
+  const accountName = user?.name || user?.username || t("account");
 
-  return /* @__PURE__ */ jsxs("header", { className: "flex justify-between items-center px-6 h-16 w-full bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-30", children: [
-    /* @__PURE__ */ jsx("div", { className: "flex items-center gap-6 flex-1", children: /* @__PURE__ */ jsx("h1", { className: "text-xl font-semibold text-on-surface", children: displayTitle }) }),
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
-      /* @__PURE__ */ jsx("button", { type: "button", onClick: toggleTheme, className: "p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-150", "aria-label": isDark ? "Switch to light theme" : "Switch to dark theme", title: isDark ? "Switch to light theme" : "Switch to dark theme", children: isDark ? /* @__PURE__ */ jsx(Sun, { className: "w-5 h-5 text-on-surface-variant" }) : /* @__PURE__ */ jsx(Moon, { className: "w-5 h-5 text-on-surface-variant" }) }),
-      /* @__PURE__ */ jsx("button", { className: "p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-150", children: /* @__PURE__ */ jsx(Bell, { className: "w-5 h-5 text-on-surface-variant" }) }),
-      /* @__PURE__ */ jsx("button", { className: "p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-150", children: /* @__PURE__ */ jsx(History, { className: "w-5 h-5 text-on-surface-variant" }) }),
-      /* @__PURE__ */ jsx("div", { className: "w-8 h-8 rounded-full overflow-hidden border border-outline-variant", children: /* @__PURE__ */ jsx(
-        "img",
-        {
-          src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCCm8H-GnZE81Qo-Ixgf76kpX1JIFtA3bDvByWZe3kbJsGUeeHTXUhJ4fbcML8Q8H6_V6n9WycCWApLklWGeDv-X6dAVayJcmMXjfzx-4UiuX_dKgn9RqRZfkUpMQQh6UG3Msvshi12VxBJ17VNhHQ1O-Wxu4P6-Ng3CCVM5wC5L-DeUocLJec3v-_uxcPJaNkEmJZ4sGar8bRJLNq1Lrs1HgSEAX-Wjh2JEe24GPY_6i_6YdWGKiGIBBj6AUK5KZsRHhzhNzciElQh",
-          alt: "User Profile",
-          width: 32,
-          height: 32,
-          className: "w-full h-full object-cover"
-        }
-      ) })
-    ] })
-  ] });
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!languageRef.current?.contains(event.target)) {
+        setIsLanguageOpen(false);
+      }
+
+      if (!accountRef.current?.contains(event.target)) {
+        setIsAccountOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setIsLanguageOpen(false);
+        setIsAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setIsAccountOpen(false);
+    navigate("/login");
+  };
+
+  const handleLanguageSelect = (nextLanguage) => {
+    setLanguage(nextLanguage);
+    setIsLanguageOpen(false);
+  };
+
+  return (
+    <header className="flex h-16 w-full items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-6 sticky top-0 z-30">
+      <div className="flex flex-1 items-center gap-6">
+        <h1 className="text-xl font-semibold text-on-surface">{displayTitle}</h1>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div ref={languageRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsLanguageOpen((open) => !open)}
+            className="flex h-9 items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-low px-3 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+            aria-label="Change language"
+            aria-expanded={isLanguageOpen}
+            aria-haspopup="menu"
+          >
+            {t("language")}
+            <ChevronDown className={`h-4 w-4 transition-transform ${isLanguageOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {isLanguageOpen ? (
+            <div className="absolute right-0 mt-2 w-48 rounded-xl border border-outline-variant bg-surface-container-lowest p-2 shadow-lg">
+              {languageOptions.map((option) => {
+                const isSelected = language === option.code;
+
+                return (
+                  <button
+                    key={option.code}
+                    type="button"
+                    onClick={() => handleLanguageSelect(option.code)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "bg-primary-container text-on-primary-container"
+                        : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                    }`}
+                    aria-pressed={isSelected}
+                  >
+                    <Check className={`h-4 w-4 ${isSelected ? "opacity-100" : "opacity-0"}`} />
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="rounded-full p-2 transition-all duration-150 hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/40 active:scale-90"
+          aria-label={isDark ? t("light") : t("dark")}
+          title={isDark ? t("light") : t("dark")}
+        >
+          {isDark ? <Sun className="h-5 w-5 text-on-surface-variant" /> : <Moon className="h-5 w-5 text-on-surface-variant" />}
+        </button>
+
+        <div ref={accountRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsAccountOpen((open) => !open)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container text-sm font-bold text-on-surface transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/40"
+            aria-label={t("account")}
+            aria-expanded={isAccountOpen}
+            aria-haspopup="menu"
+          >
+            {getInitials(user)}
+          </button>
+
+          {isAccountOpen ? (
+            <div className="absolute right-0 mt-2 w-64 rounded-xl border border-outline-variant bg-surface-container-lowest p-2 shadow-lg">
+              <div className="border-b border-outline-variant px-3 py-3">
+                <p className="truncate text-sm font-semibold text-on-surface">{accountName}</p>
+                {user?.email ? <p className="mt-1 truncate text-xs text-on-surface-variant">{user.email}</p> : null}
+              </div>
+              <div className="py-2">
+                <Link
+                  to="/settings"
+                  onClick={() => setIsAccountOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t("settings")}
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-error transition-colors hover:bg-error-container/30"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t("logout")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
 }
+
 export {
   Header
 };

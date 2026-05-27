@@ -9,12 +9,11 @@ import {
   CheckSquare,
   ChevronRight,
   Settings,
-  Search,
   Target
 } from "lucide-react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "@/i18n";
-import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser, logout } from "@/lib/api";
+import { fetchCategories, fetchGoals, fetchTasks, fetchTasksWithParams, getStoredUser } from "@/lib/api";
 const fallbackCategoryColor = "#64748B";
 function getCategoryColor(color) {
   if (typeof color !== "string") return fallbackCategoryColor;
@@ -23,7 +22,6 @@ function getCategoryColor(color) {
 }
 function Sidebar({ onTaskSelect, refreshKey = 0 }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [mainItems, setMainItems] = useState([
@@ -92,17 +90,12 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
       (prev) => prev.includes(id) ? prev.filter((entry) => entry !== id) : [...prev, id]
     );
   };
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
   return /* @__PURE__ */ jsxs("aside", { className: "fixed left-0 top-0 h-full w-[260px] flex flex-col py-4 z-40 bg-surface border-r border-outline-variant", children: [
     /* @__PURE__ */ jsxs("div", { className: "px-6 mb-6 flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs(Link, { to: "/dashboard", className: "block rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40", children: [
         /* @__PURE__ */ jsx("span", { className: "text-sm font-bold text-primary", children: "AI Planner" }),
         /* @__PURE__ */ jsx("div", { className: "text-sm text-on-surface-variant", children: t("appSubtitle") })
-      ] }),
-      /* @__PURE__ */ jsx("button", { className: "text-on-surface-variant hover:text-on-surface transition-colors", children: /* @__PURE__ */ jsx(Search, { className: "w-5 h-5" }) })
+      ] })
     ] }),
     /* @__PURE__ */ jsxs("nav", { className: "flex-1 px-1 overflow-y-auto space-y-1", children: [
       mainItems.map((item) => /* @__PURE__ */ jsx(
@@ -194,21 +187,12 @@ function Sidebar({ onTaskSelect, refreshKey = 0 }) {
           ]
         }
       ),
-      /* @__PURE__ */ jsxs("div", { className: "pt-6 mt-4 border-t border-outline-variant px-4 flex items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsx("div", { className: "pt-6 mt-4 border-t border-outline-variant px-4", children:
         /* @__PURE__ */ jsxs("div", { className: "overflow-hidden min-w-0", children: [
           /* @__PURE__ */ jsx("p", { className: "text-sm font-bold truncate", children: user?.name ?? "Guest" }),
           /* @__PURE__ */ jsx("p", { className: "text-sm text-outline truncate", children: user?.email ?? "Not signed in" })
-        ] }),
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            onClick: handleLogout,
-            className: "text-xs text-primary font-semibold hover:underline flex-shrink-0",
-            children: t("logout")
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsx("div", { className: "px-4 pb-2", children: /* @__PURE__ */ jsx(Link, { to: "/login", className: "text-xs text-on-surface-variant hover:text-primary", children: t("switchAccount") }) })
+        ] })
+      })
     ] })
   ] });
 }
