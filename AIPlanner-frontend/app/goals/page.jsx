@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, CheckCircle2, Clock, Plus, Search, Target } from "lucide-react";
+import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchGoals, fetchPlanByGoalId } from "@/lib/api";
 
@@ -222,10 +223,10 @@ function GoalsContent() {
   };
 
   const summaryCards = [
-    { label: "Total Goals", value: summary.total },
-    { label: "Active Goals", value: summary.active },
-    { label: "Completed Goals", value: summary.completed },
-    { label: "Average Progress", value: summary.averageProgress }
+    { label: "Total Goals", value: summary.total, variant: "purple", icon: <Target className="h-5 w-5" /> },
+    { label: "Active Goals", value: summary.active, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
+    { label: "Completed Goals", value: summary.completed, variant: "green", icon: <CheckCircle2 className="h-5 w-5" /> },
+    { label: "Average Progress", value: summary.averageProgress, variant: "purple", icon: <Clock className="h-5 w-5" /> }
   ];
   const hasFilters = searchTerm.trim() || statusFilter !== "all" || sortOption !== "newest";
   const isEmpty = !isLoading && !errorMessage && goals.length === 0;
@@ -249,10 +250,7 @@ function GoalsContent() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
-            <p className="text-xs font-medium text-on-surface-variant">{card.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-on-surface">{card.value}</p>
-          </div>
+          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} />
         ))}
       </div>
 

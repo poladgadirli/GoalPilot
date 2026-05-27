@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Check, Clock, Plus, Search, Star } from "lucide-react";
+import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
@@ -287,10 +288,10 @@ function TasksContent({ onTasksChanged }) {
   };
 
   const summaryCards = [
-    { label: "Total Tasks", value: summary.total },
-    { label: "Open Tasks", value: summary.open },
-    { label: "Completed", value: summary.completed },
-    { label: "High Priority", value: summary.highPriority }
+    { label: "Total Tasks", value: summary.total, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
+    { label: "Open Tasks", value: summary.open, variant: "orange", icon: <Clock className="h-5 w-5" /> },
+    { label: "Completed", value: summary.completed, variant: "green", icon: <Check className="h-5 w-5" /> },
+    { label: "High Priority", value: summary.highPriority, variant: "red", icon: <Star className="h-5 w-5" /> }
   ];
 
   const hasFilters = categoryId || searchTerm.trim() || statusFilter !== "all" || priorityFilter !== "all" || dateFilter !== "all" || sortOption !== "newest";
@@ -315,10 +316,7 @@ function TasksContent({ onTasksChanged }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryCards.map((card) => (
-          <div key={card.label} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
-            <p className="text-xs font-medium text-on-surface-variant">{card.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-on-surface">{card.value}</p>
-          </div>
+          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} />
         ))}
       </div>
 

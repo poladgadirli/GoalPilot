@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertTriangle, CalendarDays, Check, Clock, Plus, Sparkles, Star } from "lucide-react";
+import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { completePlanTask, fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
@@ -308,10 +309,10 @@ function MyDayContent({ onTasksChanged }) {
   };
 
   const summaryCards = [
-    { label: "Due Today", value: todayManualTasks.length },
-    { label: "Completed Today", value: completedToday },
-    { label: "Overdue", value: overdueTasks.length },
-    { label: "Estimated Time", value: formatMinutes(estimatedMinutes) ?? "0 min" }
+    { label: "Due Today", value: todayManualTasks.length, variant: "blue", icon: <CalendarDays className="h-5 w-5" /> },
+    { label: "Completed Today", value: completedToday, variant: "green", icon: <Check className="h-5 w-5" /> },
+    { label: "Overdue", value: overdueTasks.length, variant: "red", icon: <AlertTriangle className="h-5 w-5" /> },
+    { label: "Estimated Time", value: formatMinutes(estimatedMinutes) ?? "0 min", variant: "purple", icon: <Clock className="h-5 w-5" /> }
   ];
 
   return (
@@ -332,10 +333,7 @@ function MyDayContent({ onTasksChanged }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {summaryCards.map((card) => (
-          <div key={card.label} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant">
-            <p className="text-xs font-medium text-on-surface-variant">{card.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-on-surface">{card.value}</p>
-          </div>
+          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} />
         ))}
       </div>
 
