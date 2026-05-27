@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { useTranslation } from "@/i18n";
-import { completePlanTask, fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
+import { fetchGoals, fetchPlanByGoalId, fetchTasksWithParams, setPlanTaskCompletion, updateTask, updateTaskImportant } from "@/lib/api";
 
 function getLocalDateKey(value = new Date()) {
   if (typeof value === "string") {
@@ -144,7 +144,7 @@ function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onTo
   );
 }
 
-function PlanTaskRow({ task, isUpdating, onComplete }) {
+function PlanTaskRow({ task, isUpdating, onToggle }) {
   const completed = Boolean(task.completed);
   const estimated = formatMinutes(task.estimatedMinutes);
 
@@ -152,12 +152,10 @@ function PlanTaskRow({ task, isUpdating, onComplete }) {
     <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex items-start gap-3">
       <CheckboxButton
         checked={completed}
-        disabled={completed}
+        disabled={false}
         isUpdating={isUpdating}
-        label={completed ? "AI plan task completed" : "Complete AI plan task"}
-        onClick={() => {
-          if (!completed) onComplete(task);
-        }}
+        label={completed ? "Mark AI plan task incomplete" : "Complete AI plan task"}
+        onClick={() => onToggle(task, !completed)}
       />
       <div className="min-w-0 flex-1">
         <h3 className={`font-semibold break-words ${completed ? "text-outline line-through" : "text-on-surface"}`}>
@@ -298,14 +296,14 @@ function MyDayContent({ onTasksChanged }) {
     }
   };
 
-  const handleCompletePlanTask = async (task) => {
+  const handleSetPlanTaskCompletion = async (task, completed) => {
     setUpdatingPlanIds((ids) => [...ids, task.id]);
     setErrorMessage(null);
     try {
-      const updatedTask = await completePlanTask(task.id);
+      const updatedTask = await setPlanTaskCompletion(task.id, completed);
       setPlanTasks((tasks) => tasks.map((entry) => entry.id === task.id ? { ...entry, ...updatedTask } : entry));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to complete AI plan task.");
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update AI plan task.");
     } finally {
       setUpdatingPlanIds((ids) => ids.filter((id) => id !== task.id));
     }
@@ -442,7 +440,7 @@ function MyDayContent({ onTasksChanged }) {
                     key={task.id}
                     task={task}
                     isUpdating={updatingPlanIds.includes(task.id)}
-                    onComplete={handleCompletePlanTask}
+                    onToggle={handleSetPlanTaskCompletion}
                   />
                 ))}
               </div>

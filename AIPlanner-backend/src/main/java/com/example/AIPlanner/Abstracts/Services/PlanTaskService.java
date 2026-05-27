@@ -7,4 +7,6 @@ public interface PlanTaskService {
     PlanTaskResponse completeTask(Long taskId);
 
     PlanTaskResponse uncompleteTask(Long taskId);
+
+    PlanTaskResponse updateCompletion(Long taskId, Boolean completed);
 }

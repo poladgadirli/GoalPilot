@@ -6,10 +6,12 @@ import com.example.AIPlanner.DTOs.Responses.Plans.PlanTaskResponse;
 import com.example.AIPlanner.Entities.PlanTask;
 import com.example.AIPlanner.Mappers.PlanMapper;
 import com.example.AIPlanner.Repositories.PlanTaskRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.AIPlanner.Enums.GoalStatus;
 import com.example.AIPlanner.Repositories.GoalRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PlanTaskServiceImpl implements PlanTaskService {
@@ -33,29 +35,24 @@ public class PlanTaskServiceImpl implements PlanTaskService {
     @Override
     @Transactional
     public PlanTaskResponse completeTask(Long taskId) {
-        Long userId = currentUserService.getCurrentUserId();
-
-        PlanTask task = planTaskRepository.findByIdAndPlanDayPlanUserId(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Plan task not found"));
-
-        task.setCompleted(true);
-
-        PlanTask updatedTask = planTaskRepository.save(task);
-
-        updateGoalStatusByTask(updatedTask);
-
-        return planMapper.toTaskResponse(updatedTask);
+        return updateCompletion(taskId, true);
     }
 
     @Override
     @Transactional
     public PlanTaskResponse uncompleteTask(Long taskId) {
+        return updateCompletion(taskId, false);
+    }
+
+    @Override
+    @Transactional
+    public PlanTaskResponse updateCompletion(Long taskId, Boolean completed) {
         Long userId = currentUserService.getCurrentUserId();
 
         PlanTask task = planTaskRepository.findByIdAndPlanDayPlanUserId(taskId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Plan task not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Plan task not found"));
 
-        task.setCompleted(false);
+        task.setCompleted(Boolean.TRUE.equals(completed));
 
         PlanTask updatedTask = planTaskRepository.save(task);
 

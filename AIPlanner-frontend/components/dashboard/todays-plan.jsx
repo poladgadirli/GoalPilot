@@ -3,7 +3,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { Check, Lightbulb } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import { completePlanTask, fetchGoals, fetchPlanByGoalId } from "@/lib/api";
+import { fetchGoals, fetchPlanByGoalId, setPlanTaskCompletion } from "@/lib/api";
 function getLocalDateKey(value = /* @__PURE__ */ new Date()) {
   if (typeof value === "string") {
     const dateOnly = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
@@ -66,11 +66,11 @@ function TodaysPlan({ refreshKey = 0 }) {
       isMounted = false;
     };
   }, [refreshKey]);
-  const handleCompletePlanTask = async (planId, taskId) => {
+  const handleSetPlanTaskCompletion = async (planId, taskId, completed) => {
     setCompletingTaskIds((ids) => [...ids, taskId]);
     setErrorMessage(null);
     try {
-      const updatedTask = await completePlanTask(taskId);
+      const updatedTask = await setPlanTaskCompletion(taskId, completed);
       setAiPlans((plans) => plans.map((plan) => {
         if (plan.id !== planId) return plan;
         const todayTasks = plan.todayTasks.map((task) => task.id === taskId ? updatedTask : task);
@@ -82,7 +82,7 @@ function TodaysPlan({ refreshKey = 0 }) {
         };
       }));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to complete plan task.");
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update plan task.");
     } finally {
       setCompletingTaskIds((ids) => ids.filter((id) => id !== taskId));
     }
@@ -138,10 +138,10 @@ function TodaysPlan({ refreshKey = 0 }) {
                   "button",
                   {
                     type: "button",
-                    onClick: () => !task.completed && handleCompletePlanTask(plan.id, task.id),
-                    disabled: task.completed || isCompleting,
+                    onClick: () => handleSetPlanTaskCompletion(plan.id, task.id, !task.completed),
+                    disabled: isCompleting,
                     className: `flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${task.completed ? "bg-primary border-primary" : "border-outline-variant hover:border-primary"}`,
-                    "aria-label": task.completed ? "Plan task completed" : "Complete plan task",
+                    "aria-label": task.completed ? "Mark plan task incomplete" : "Complete plan task",
                     children: task.completed && /* @__PURE__ */ jsx(Check, { className: "w-3 h-3 text-on-primary" })
                   }
                 ),

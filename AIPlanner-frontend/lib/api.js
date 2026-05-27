@@ -277,6 +277,12 @@ async function completePlanTask(id) {
     method: "PATCH"
   });
 }
+async function setPlanTaskCompletion(id, completed) {
+  return requestJson(`/api/plan-tasks/${id}/completion`, {
+    method: "PATCH",
+    body: JSON.stringify({ completed })
+  });
+}
 async function generateAiPlan(goalId) {
   return requestJson(`/api/goals/${goalId}/plans/generate-ai`, {
     method: "POST"
@@ -307,6 +313,7 @@ export {
   login,
   logout,
   register,
+  setPlanTaskCompletion,
   setStoredUser,
   storeAuth,
   USER_UPDATED_EVENT,

@@ -1,8 +1,10 @@
 package com.example.AIPlanner.Controllers;
 
 import com.example.AIPlanner.Abstracts.Services.PlanTaskService;
+import com.example.AIPlanner.DTOs.Requests.Plans.UpdatePlanTaskCompletionRequest;
 import com.example.AIPlanner.DTOs.Responses.Plans.PlanTaskResponse;
 import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,5 +29,15 @@ public class PlanTaskController {
         PlanTaskResponse task = planTaskService.uncompleteTask(taskId);
 
         return ApiResponse.success("Plan task marked as incomplete successfully", task);
+    }
+
+    @PatchMapping("/{taskId}/completion")
+    public ApiResponse<PlanTaskResponse> updateCompletion(
+            @PathVariable Long taskId,
+            @Valid @RequestBody UpdatePlanTaskCompletionRequest request
+    ) {
+        PlanTaskResponse task = planTaskService.updateCompletion(taskId, request.getCompleted());
+
+        return ApiResponse.success("Plan task completion updated successfully", task);
     }
 }

@@ -6,7 +6,7 @@ import { ArrowLeft, CalendarDays, Check, Clock, Target, Trash2 } from "lucide-re
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { useTranslation } from "@/i18n";
-import { deleteGoal, fetchGoalById, fetchPlanByGoalId } from "@/lib/api";
+import { deleteGoal, fetchGoalById, fetchPlanByGoalId, setPlanTaskCompletion } from "@/lib/api";
 
 function formatDate(value, locale, fallback) {
   if (!value) return fallback;
@@ -49,6 +49,7 @@ function GoalDetailContent() {
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingPlanTaskIds, setUpdatingPlanTaskIds] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
 
   const loadGoal = async () => {
@@ -109,6 +110,28 @@ function GoalDetailContent() {
       setErrorMessage(error instanceof Error ? error.message : "Unable to delete goal.");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSetPlanTaskCompletion = async (taskId, completed) => {
+    setUpdatingPlanTaskIds((ids) => [...ids, taskId]);
+    setErrorMessage(null);
+    try {
+      const updatedTask = await setPlanTaskCompletion(taskId, completed);
+      setPlan((currentPlan) => {
+        if (!currentPlan) return currentPlan;
+        return {
+          ...currentPlan,
+          days: (currentPlan.days ?? []).map((day) => ({
+            ...day,
+            tasks: (day.tasks ?? []).map((task) => task.id === taskId ? updatedTask : task)
+          }))
+        };
+      });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update plan task.");
+    } finally {
+      setUpdatingPlanTaskIds((ids) => ids.filter((id) => id !== taskId));
     }
   };
 
@@ -210,11 +233,16 @@ function GoalDetailContent() {
                       <div className="mt-3 space-y-2">
                         {day.tasks.map((task) => (
                           <div key={task.id} className="flex items-start gap-3 rounded-lg bg-surface-container-low p-3">
-                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
+                            <button
+                              type="button"
+                              onClick={() => handleSetPlanTaskCompletion(task.id, !task.completed)}
+                              disabled={updatingPlanTaskIds.includes(task.id)}
+                              aria-label={task.completed ? "Mark plan task incomplete" : "Complete plan task"}
+                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                               task.completed ? "border-primary bg-primary" : "border-outline-variant"
                             }`}>
                               {task.completed ? <Check className="h-3 w-3 text-on-primary" /> : null}
-                            </span>
+                            </button>
                             <div className="min-w-0 flex-1">
                               <p className={`text-sm font-medium ${task.completed ? "text-outline line-through" : "text-on-surface"}`}>{task.title}</p>
                               {task.description ? <p className="mt-1 text-xs text-on-surface-variant">{task.description}</p> : null}
