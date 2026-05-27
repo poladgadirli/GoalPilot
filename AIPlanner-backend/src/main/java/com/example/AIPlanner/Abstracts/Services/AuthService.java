@@ -6,6 +6,8 @@ import com.example.AIPlanner.DTOs.Requests.Auth.RefreshTokenRequest;
 import com.example.AIPlanner.DTOs.Requests.Auth.RegisterRequest;
 import com.example.AIPlanner.DTOs.Responses.Auth.AuthResponse;
 
+import main.java.com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
+
 public interface AuthService {
 
     AuthResponse register(RegisterRequest request);
@@ -15,4 +17,6 @@ public interface AuthService {
     AuthResponse refreshToken(RefreshTokenRequest request);
 
     void logout(LogoutRequest request);
+
+    void changePassword(ChangePasswordRequest request);
 }
