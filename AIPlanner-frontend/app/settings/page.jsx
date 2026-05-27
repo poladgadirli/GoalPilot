@@ -1,5 +1,6 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
+import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { useTheme } from "@/components/theme-provider";
 import { getStoredUser } from "@/lib/api";
@@ -12,8 +13,8 @@ function SettingsContent() {
     { value: "dark", label: "Dark" }
   ];
 
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: "Settings" }),
+  return /* @__PURE__ */ jsxs("section", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsx(PageHeader, { title: "Settings", subtitle: "Manage your account and interface preferences" }),
     /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-4", children: [
       /* @__PURE__ */ jsx("h3", { className: "font-semibold", children: "Appearance" }),
       /* @__PURE__ */ jsx("div", { className: "flex flex-wrap gap-2", children: themeOptions.map((option) => /* @__PURE__ */ jsx(

@@ -64,7 +64,7 @@ function CreateTaskModal({ isOpen, onClose, onSaved }) {
           onClick: (e) => e.stopPropagation(),
           children: [
             /* @__PURE__ */ jsxs("div", { className: "px-6 py-4 border-b border-outline-variant flex justify-between items-center", children: [
-              /* @__PURE__ */ jsx("h2", { className: "text-xl font-serif font-semibold", children: "Create New Task" }),
+              /* @__PURE__ */ jsx("h2", { className: "text-xl font-semibold text-on-surface", children: "Create New Task" }),
               /* @__PURE__ */ jsx(
                 "button",
                 {

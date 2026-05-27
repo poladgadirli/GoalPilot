@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, Check, Clock, Plus, Star } from "lucide-react";
+import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
 
@@ -203,19 +204,19 @@ function ImportantContent({ onTasksChanged }) {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-on-surface">Important</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">Starred tasks that need extra attention</p>
-        </div>
-        <Link
-          to="/tasks/new"
-          className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          New Task
-        </Link>
-      </div>
+      <PageHeader
+        title="Important"
+        subtitle="Starred tasks that need extra attention"
+        action={(
+          <Link
+            to="/tasks/new"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            New Task
+          </Link>
+        )}
+      />
 
       {isLoading ? (
         <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant">

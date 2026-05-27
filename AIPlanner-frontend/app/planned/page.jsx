@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertTriangle, CalendarDays, Check, Clock, Plus, Search, Star } from "lucide-react";
+import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchTasksWithParams, updateTask, updateTaskImportant } from "@/lib/api";
@@ -276,23 +277,23 @@ function PlannedContent({ onTasksChanged }) {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-on-surface">Planned</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">Tasks scheduled for upcoming days</p>
-        </div>
-        <Link
-          to="/tasks/new"
-          className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          New Task
-        </Link>
-      </div>
+      <PageHeader
+        title="Planned"
+        subtitle="Tasks scheduled for upcoming days"
+        action={(
+          <Link
+            to="/tasks/new"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            New Task
+          </Link>
+        )}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
-          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} />
+          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} size="lg" />
         ))}
       </div>
 

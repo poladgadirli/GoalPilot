@@ -34,7 +34,7 @@ function OverviewCards() {
       children: [
         /* @__PURE__ */ jsx("p", { className: "text-sm font-semibold text-on-surface-variant", children: card.label }),
         /* @__PURE__ */ jsxs("div", { className: "flex items-end justify-between mt-1", children: [
-          /* @__PURE__ */ jsx("span", { className: "text-2xl font-serif font-semibold", children: card.value }),
+          /* @__PURE__ */ jsx("span", { className: "text-2xl font-semibold", children: card.value }),
           card.extra
         ] })
       ]

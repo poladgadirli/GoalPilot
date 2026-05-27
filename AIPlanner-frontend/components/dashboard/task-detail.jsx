@@ -89,7 +89,7 @@ function TaskDetail({ taskId, onBack, onTaskUpdated }) {
           children: /* @__PURE__ */ jsx(ArrowLeft, { className: "w-5 h-5" })
         }
       ),
-      /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: isLoading ? "Loading task..." : task?.title ?? "Task Details" })
+      /* @__PURE__ */ jsx("h2", { className: "text-xl font-semibold text-on-surface", children: isLoading ? "Loading task..." : task?.title ?? "Task Details" })
     ] }),
     errorMessage && /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }),
     isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant text-on-surface-variant", children: "Loading task details..." }) : task && /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-12 gap-6", children: [

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Check, Clock, Target, Trash2 } from "lucide-react";
+import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { deleteGoal, fetchGoalById, fetchPlanByGoalId } from "@/lib/api";
 
@@ -117,7 +118,7 @@ function GoalDetailContent() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <h2 className="text-2xl font-serif font-semibold text-on-surface">
+          <h2 className="text-xl font-semibold text-on-surface">
             {isLoading ? "Loading goal..." : goal?.title ?? "Goal Details"}
           </h2>
           {goal?.description ? <p className="mt-1 text-sm text-on-surface-variant">{goal.description}</p> : null}
@@ -159,22 +160,10 @@ function GoalDetailContent() {
       {goal ? (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
-              <p className="text-xs font-medium text-on-surface-variant">Status</p>
-              <p className="mt-2 font-semibold text-on-surface">{statusLabel(goal, progress)}</p>
-            </div>
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
-              <p className="text-xs font-medium text-on-surface-variant">Deadline</p>
-              <p className="mt-2 font-semibold text-on-surface">{formatDate(goal.endDate)}</p>
-            </div>
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
-              <p className="text-xs font-medium text-on-surface-variant">Daily Time</p>
-              <p className="mt-2 font-semibold text-on-surface">{goal.dailyAvailableMinutes ?? 0} min</p>
-            </div>
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
-              <p className="text-xs font-medium text-on-surface-variant">Plan Tasks</p>
-              <p className="mt-2 font-semibold text-on-surface">{stats.completedTasks}/{stats.totalTasks}</p>
-            </div>
+            <StatCard title="Status" value={statusLabel(goal, progress)} variant="blue" icon={<Target className="h-5 w-5" />} />
+            <StatCard title="Deadline" value={formatDate(goal.endDate)} variant="purple" icon={<CalendarDays className="h-5 w-5" />} />
+            <StatCard title="Daily Time" value={`${goal.dailyAvailableMinutes ?? 0} min`} variant="orange" icon={<Clock className="h-5 w-5" />} />
+            <StatCard title="Plan Tasks" value={`${stats.completedTasks}/${stats.totalTasks}`} variant="green" icon={<Check className="h-5 w-5" />} />
           </div>
 
           <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5">

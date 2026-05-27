@@ -55,7 +55,7 @@ function TaskList({ onTaskSelect }) {
   };
   return /* @__PURE__ */ jsxs("section", { className: "lg:col-span-8 space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-xl font-serif font-semibold", children: "Today's Tasks" }),
+      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: "Today's Tasks" }),
       /* @__PURE__ */ jsxs(
         "button",
         {

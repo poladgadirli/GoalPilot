@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CalendarDays, CheckCircle2, Clock, Plus, Search, Target } from "lucide-react";
+import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { fetchGoals, fetchPlanByGoalId } from "@/lib/api";
@@ -235,23 +236,23 @@ function GoalsContent() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-on-surface">Goals</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">Track your objectives and AI-generated plans</p>
-        </div>
-        <Link
-          to="/goals/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-all active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          New Goal
-        </Link>
-      </div>
+      <PageHeader
+        title="Goals"
+        subtitle="Track your objectives and AI-generated plans"
+        action={(
+          <Link
+            to="/goals/new"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            New Goal
+          </Link>
+        )}
+      />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((card) => (
-          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} />
+          <StatCard key={card.label} title={card.label} value={card.value} icon={card.icon} variant={card.variant} size="lg" />
         ))}
       </div>
 

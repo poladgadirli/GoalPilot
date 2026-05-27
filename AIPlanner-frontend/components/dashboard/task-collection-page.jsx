@@ -62,7 +62,7 @@ function TaskCollectionPage({ title, emptyMessage, filter = "all" }) {
 
   return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: title }),
+      /* @__PURE__ */ jsx("h2", { className: "text-xl font-semibold text-on-surface", children: title }),
       /* @__PURE__ */ jsxs(Link, { to: "/tasks/new", className: "flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all active:scale-95", children: [
         /* @__PURE__ */ jsx(Plus, { className: "w-4 h-4" }),
         "New Task"

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { PageHeader } from "@/components/common/page-header";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { createCategory, deleteCategory, fetchCategories, fetchTasksWithParams, updateCategory } from "@/lib/api";
 
@@ -147,16 +148,16 @@ function CategoriesContent() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-serif font-semibold text-on-surface">Categories</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">Organize tasks by topic, project, or area</p>
-        </div>
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-sm">
-          <span className="font-semibold text-on-surface">{categories.length}</span>
-          <span className="ml-1 text-on-surface-variant">categories</span>
-        </div>
-      </div>
+      <PageHeader
+        title="Categories"
+        subtitle="Organize tasks by topic, project, or area"
+        action={(
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-sm">
+            <span className="font-semibold text-on-surface">{categories.length}</span>
+            <span className="ml-1 text-on-surface-variant">categories</span>
+          </div>
+        )}
+      />
 
       <form onSubmit={handleCreate} className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3">

@@ -2,6 +2,7 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/common/page-header";
 import { createTask, fetchCategories } from "@/lib/api";
 
 function toLocalDateTime(value) {
@@ -63,8 +64,8 @@ function TaskFormPage() {
     }
   };
 
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsx("h2", { className: "text-2xl font-serif font-semibold", children: "New Task" }),
+  return /* @__PURE__ */ jsxs("section", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsx(PageHeader, { title: "New Task", subtitle: "Create a manual task for your planner" }),
     isLoading ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-on-surface-variant", children: "Loading form..." }) : null,
     errorMessage ? /* @__PURE__ */ jsx("div", { className: "bg-surface-container-lowest p-4 rounded-xl border border-outline-variant text-sm text-error", children: errorMessage }) : null,
     !isLoading ? /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, className: "bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant space-y-5", children: [
