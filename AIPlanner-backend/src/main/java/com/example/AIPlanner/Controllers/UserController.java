@@ -7,6 +7,7 @@ import com.example.AIPlanner.DTOs.Responses.Common.ApiResponse;
 import com.example.AIPlanner.Entities.User;
 import com.example.AIPlanner.Repositories.UserRepository;
 import jakarta.validation.Valid;
+import main.java.com.example.AIPlanner.DTOs.Requests.Auth.ChangePasswordRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -71,5 +72,12 @@ public class UserController {
                 user.getUsername(),
                 user.getEmail()
         );
+    }
+
+    @PutMapping("/me/password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+
+        return ApiResponse.success("Password changed successfully", null);
     }
 }
