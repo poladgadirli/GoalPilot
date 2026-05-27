@@ -82,7 +82,7 @@ function ManualTaskRow({ task, isUpdating, isUpdatingImportant, onComplete, onTo
   const completed = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
 
-  const openTask = () => navigate(`/tasks/${task.id}`);
+  const openTask = () => navigate(`/tasks/${task.id}`, { state: { from: "/my-day" } });
 
   return (
     <div
@@ -408,6 +408,7 @@ function MyDayContent({ onTasksChanged }) {
                     <Link
                       key={task.id}
                       to={`/tasks/${task.id}`}
+                      state={{ from: "/my-day" }}
                       className="block bg-error-container/20 p-4 rounded-xl border border-error/20 hover:border-error/40 transition-all"
                     >
                       <h4 className="font-semibold text-on-surface">{task.title}</h4>

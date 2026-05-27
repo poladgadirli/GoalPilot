@@ -129,7 +129,7 @@ function RecentManualTasks({ refreshKey = 0, onDataChange }) {
                 children: /* @__PURE__ */ jsx(Star, { className: "w-4 h-4", style: { fill: task.important ? "currentColor" : "none" } })
               }
             ),
-            /* @__PURE__ */ jsxs(Link, { to: `/tasks/${task.id}`, className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ jsxs(Link, { to: `/tasks/${task.id}`, state: { from: "/dashboard" }, className: "flex-1 min-w-0", children: [
               /* @__PURE__ */ jsx(
                 "h3",
                 {

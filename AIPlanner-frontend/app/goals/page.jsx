@@ -58,9 +58,9 @@ function GoalCard({ goal }) {
     <article
       role="link"
       tabIndex={0}
-      onClick={() => navigate(`/goals/${goal.id}`)}
+      onClick={() => navigate(`/goals/${goal.id}`, { state: { from: "/goals" } })}
       onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") navigate(`/goals/${goal.id}`);
+        if (event.key === "Enter" || event.key === " ") navigate(`/goals/${goal.id}`, { state: { from: "/goals" } });
       }}
       className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer"
     >
@@ -104,6 +104,7 @@ function GoalCard({ goal }) {
 
       <Link
         to={`/goals/${goal.id}`}
+        state={{ from: "/goals" }}
         onClick={(event) => event.stopPropagation()}
         className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
       >

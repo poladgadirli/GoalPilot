@@ -81,7 +81,7 @@ function TaskCard({ task, isUpdating, isUpdatingImportant, onComplete, onToggleI
   const done = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
 
-  const openTask = () => navigate(`/tasks/${task.id}`);
+  const openTask = () => navigate(`/tasks/${task.id}`, { state: { from: "/planned" } });
 
   return (
     <div

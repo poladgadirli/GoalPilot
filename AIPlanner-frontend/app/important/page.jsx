@@ -49,7 +49,7 @@ function ImportantTaskCard({ task, isUpdating, isUpdatingImportant, onComplete, 
   const completed = isTaskDone(task);
   const estimated = formatMinutes(task.estimatedMinutes);
 
-  const openTask = () => navigate(`/tasks/${task.id}`);
+  const openTask = () => navigate(`/tasks/${task.id}`, { state: { from: "/important" } });
 
   return (
     <div

@@ -58,6 +58,7 @@ function ActiveGoals({ refreshKey = 0 }) {
         Link,
         {
           to: `/goals/${goal.id}`,
+          state: { from: "/dashboard" },
           className: "block w-full min-w-0 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant hover:border-primary/30 hover:shadow-md transition-all",
           children: [
             /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-3 mb-3 min-w-0", children: [

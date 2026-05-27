@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Check, Clock, Target, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { deleteGoal, fetchGoalById, fetchPlanByGoalId } from "@/lib/api";
@@ -33,9 +33,15 @@ function statusLabel(goal, progress) {
   return goal?.status === "ACTIVE" ? "On Track" : goal?.status ?? "Active";
 }
 
+function getGoalBackTarget(from) {
+  return from === "/dashboard" ? "/dashboard" : "/goals";
+}
+
 function GoalDetailContent() {
   const params = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTarget = getGoalBackTarget(location.state?.from);
   const [goal, setGoal] = useState(null);
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,9 +113,9 @@ function GoalDetailContent() {
     <section className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Link to="/goals" className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+          <Link to={backTarget} className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
             <ArrowLeft className="h-4 w-4" />
-            Back to goals
+            Back
           </Link>
           <h2 className="text-2xl font-serif font-semibold text-on-surface">
             {isLoading ? "Loading goal..." : goal?.title ?? "Goal Details"}

@@ -1,17 +1,18 @@
 "use client";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 
 function AppShell({ title, children, refreshKey = 0 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [localRefreshKey, setLocalRefreshKey] = useState(0);
   const combinedRefreshKey = refreshKey + localRefreshKey;
 
   const handleTaskSelect = (taskId) => {
-    navigate(`/tasks/${taskId}`);
+    navigate(`/tasks/${taskId}`, { state: { from: `${location.pathname}${location.search}` } });
   };
 
   const refreshShell = () => {
