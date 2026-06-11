@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/goal-recommendations")
+@RequestMapping("/api/goals/recommendation")
 public class GoalRecommendationController {
 
     private final GoalRecommendationService goalRecommendationService;

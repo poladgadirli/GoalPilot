@@ -1,54 +1,79 @@
 "use client";
-import { jsx, jsxs } from "react/jsx-runtime";
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import {
-  createGoal,
-  createGoalRecommendation,
-  generateAiPlan
-} from "@/lib/api";
+import { createGoal, generatePlanForGoal, getGoalRecommendation } from "@/lib/api";
+
+const today = () => new Date().toISOString().slice(0, 10);
+
 function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [goalTitle, setGoalTitle] = useState("");
   const [goalDescription, setGoalDescription] = useState("");
+  const [dailyAvailableMinutes, setDailyAvailableMinutes] = useState(60);
+  const [startDate, setStartDate] = useState(today());
+  const [recommendation, setRecommendation] = useState(null);
+  const [durationDays, setDurationDays] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const suggestedGoals = [
-    {
-      title: "Weekly Review",
-      description: "Analyze this week's performance and plan for next week"
-    },
-    {
-      title: "Focus Block",
-      description: "3-hour deep work session for high-priority tasks"
-    },
-    {
-      title: "Team Sync",
-      description: "Coordinate with team on project status and blockers"
-    }
-  ];
-  const handleCreateGoal = async () => {
-    if (!goalTitle.trim()) return;
+
+  const resetForm = () => {
+    setGoalTitle("");
+    setGoalDescription("");
+    setDailyAvailableMinutes(60);
+    setStartDate(today());
+    setRecommendation(null);
+    setDurationDays("");
+    setErrorMessage(null);
+  };
+
+  const handleGetRecommendation = async () => {
+    if (!goalTitle.trim() || !startDate || dailyAvailableMinutes <= 0) return;
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
     try {
-      const recommendation = await createGoalRecommendation(goalTitle.trim(), goalDescription.trim());
-      const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-      const goal = await createGoal({
-        recommendationId: recommendation.recommendationId,
-        startDate: today,
-        durationDays: Math.max(recommendation.minimumRecommendedDays, 7),
-        dailyAvailableMinutes: Math.max(recommendation.minimumRecommendedMinutes, 60)
+      const result = await getGoalRecommendation({
+        title: goalTitle.trim(),
+        description: goalDescription.trim(),
+        dailyAvailableMinutes: Number(dailyAvailableMinutes),
+        startDate
       });
-      await generateAiPlan(goal.id);
-      setGoalTitle("");
-      setGoalDescription("");
+      setRecommendation(result);
+      setDurationDays(String(result.minimumRecommendedDays));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to get AI recommendation.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateGoal = async () => {
+    const selectedDurationDays = Number(durationDays);
+    if (!recommendation || selectedDurationDays < recommendation.minimumRecommendedDays) {
+      setErrorMessage(`Duration must be at least ${recommendation?.minimumRecommendedDays ?? 1} days.`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      const goal = await createGoal({
+        title: goalTitle.trim(),
+        description: goalDescription.trim(),
+        startDate,
+        durationDays: selectedDurationDays,
+        dailyAvailableMinutes: Number(dailyAvailableMinutes),
+        minimumRecommendedDays: recommendation.minimumRecommendedDays,
+        minimumRecommendedMinutes: recommendation.minimumRecommendedMinutes
+      });
+      await generatePlanForGoal(goal.id);
+      resetForm();
       setIsExpanded(false);
       setSuccessMessage("Goal created and AI plan generated.");
       onGoalCreated?.();
@@ -58,93 +83,82 @@ function AiGoalCreator({ onGoalCreated, defaultExpanded = false, createPath }) {
       setIsSubmitting(false);
     }
   };
-  return /* @__PURE__ */ jsxs("section", { className: "space-y-4", children: [
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx(Sparkles, { className: "w-5 h-5 text-primary" }),
-      /* @__PURE__ */ jsx("h2", { className: "text-lg font-semibold text-on-surface", children: t("aiGoalCreator") })
-    ] }),
-    successMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-300 px-3 py-2 rounded-lg", children: successMessage }) : null,
-    !isExpanded ? /* @__PURE__ */ jsxs(
-      "button",
-      {
-        onClick: () => createPath ? navigate(createPath) : setIsExpanded(true),
-        className: "w-full bg-gradient-to-r from-primary-fixed-dim/20 to-primary/10 hover:from-primary-fixed-dim/30 hover:to-primary/20 border border-primary/20 p-4 rounded-xl transition-all flex items-center gap-3 text-left",
-        children: [
-          /* @__PURE__ */ jsx(Plus, { className: "w-5 h-5 text-primary flex-shrink-0" }),
-          /* @__PURE__ */ jsxs("div", { children: [
-            /* @__PURE__ */ jsx("p", { className: "font-semibold text-on-surface text-sm", children: t("createNewGoal") }),
-            /* @__PURE__ */ jsx("p", { className: "text-xs text-on-surface-variant", children: t("aiGoalHelp") })
-          ] })
-        ]
-      }
-    ) : /* @__PURE__ */ jsxs("div", { className: "bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3", children: [
-      /* @__PURE__ */ jsx(
-        "input",
-        {
-          type: "text",
-          placeholder: "What do you want to achieve?",
-          value: goalTitle,
-          onChange: (e) => setGoalTitle(e.target.value),
-          className: "w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "textarea",
-        {
-          placeholder: "Add details (optional)",
-          value: goalDescription,
-          onChange: (e) => setGoalDescription(e.target.value),
-          className: "w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-          rows: 2
-        }
-      ),
-      errorMessage ? /* @__PURE__ */ jsx("p", { className: "text-sm text-error", children: errorMessage }) : null,
-      /* @__PURE__ */ jsxs("div", { className: "flex gap-2 pt-2", children: [
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            onClick: handleCreateGoal,
-            disabled: isSubmitting || !goalTitle.trim(),
-            className: "flex-1 bg-primary text-on-primary font-semibold py-2 rounded-lg hover:opacity-90 transition-all text-sm disabled:opacity-50",
-            children: isSubmitting ? `${t("create")}...` : t("createNewGoal")
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            onClick: () => {
-              setIsExpanded(false);
-              setGoalTitle("");
-              setGoalDescription("");
-              setErrorMessage(null);
-            },
-            disabled: isSubmitting,
-            className: "flex-1 bg-surface-container text-on-surface font-semibold py-2 rounded-lg hover:bg-surface-container-high transition-all text-sm",
-            children: t("cancel")
-          }
-        )
-      ] })
-    ] }),
-    isExpanded && /* @__PURE__ */ jsxs("div", { className: "space-y-2 pt-2 border-t border-outline-variant", children: [
-      /* @__PURE__ */ jsx("p", { className: "text-xs font-medium text-on-surface-variant uppercase tracking-wider", children: "Suggested Goals" }),
-      /* @__PURE__ */ jsx("div", { className: "space-y-2", children: suggestedGoals.map((goal) => /* @__PURE__ */ jsxs(
-        "button",
-        {
-          onClick: () => {
-            setGoalTitle(goal.title);
-            setGoalDescription(goal.description);
-          },
-          className: "w-full text-left bg-surface-container/50 hover:bg-surface-container p-2 rounded-lg transition-all text-sm",
-          children: [
-            /* @__PURE__ */ jsx("p", { className: "font-medium text-on-surface", children: goal.title }),
-            /* @__PURE__ */ jsx("p", { className: "text-xs text-on-surface-variant", children: goal.description })
-          ]
-        },
-        goal.title
-      )) })
-    ] })
-  ] });
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-semibold text-on-surface">{t("aiGoalCreator")}</h2>
+      </div>
+
+      {successMessage && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">{successMessage}</p>}
+
+      {!isExpanded ? (
+        <button
+          onClick={() => createPath ? navigate(createPath) : setIsExpanded(true)}
+          className="flex w-full items-center gap-3 rounded-xl border border-primary/20 bg-gradient-to-r from-primary-fixed-dim/20 to-primary/10 p-4 text-left transition-all hover:from-primary-fixed-dim/30 hover:to-primary/20"
+        >
+          <Plus className="w-5 h-5 flex-shrink-0 text-primary" />
+          <div>
+            <p className="text-sm font-semibold text-on-surface">{t("createNewGoal")}</p>
+            <p className="text-xs text-on-surface-variant">{t("aiGoalHelp")}</p>
+          </div>
+        </button>
+      ) : (
+        <div className="space-y-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-on-surface">Step 1: Goal details</p>
+            <input type="text" placeholder="What do you want to achieve?" value={goalTitle} onChange={(event) => setGoalTitle(event.target.value)} disabled={Boolean(recommendation)} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60" />
+            <textarea placeholder="Add details (optional)" value={goalDescription} onChange={(event) => setGoalDescription(event.target.value)} disabled={Boolean(recommendation)} rows={3} className="w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-sm text-on-surface">
+                <span>Daily available minutes</span>
+                <input type="number" min="1" step="1" value={dailyAvailableMinutes} onChange={(event) => setDailyAvailableMinutes(event.target.value)} disabled={Boolean(recommendation)} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60" />
+              </label>
+              <label className="space-y-1 text-sm text-on-surface">
+                <span>Start date</span>
+                <input type="date" min={today()} value={startDate} onChange={(event) => setStartDate(event.target.value)} disabled={Boolean(recommendation)} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60" />
+              </label>
+            </div>
+            {!recommendation && (
+              <button onClick={handleGetRecommendation} disabled={isSubmitting || !goalTitle.trim() || !startDate || Number(dailyAvailableMinutes) <= 0} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-on-primary transition-all hover:opacity-90 disabled:opacity-50">
+                {isSubmitting ? "Getting recommendation..." : "Get AI recommendation"}
+              </button>
+            )}
+          </div>
+
+          {recommendation && (
+            <div className="space-y-3 border-t border-outline-variant pt-4">
+              <p className="text-sm font-semibold text-on-surface">Step 2: Confirm duration</p>
+              <div className="rounded-lg bg-surface-container p-3 text-sm text-on-surface">
+                <p><strong>Minimum recommended days:</strong> {recommendation.minimumRecommendedDays}</p>
+                <p><strong>Minimum recommended total minutes:</strong> {recommendation.minimumRecommendedMinutes}</p>
+                <p className="mt-2 text-on-surface-variant">{recommendation.reason}</p>
+              </div>
+              <label className="block space-y-1 text-sm text-on-surface">
+                <span>Duration days</span>
+                <input type="number" min={recommendation.minimumRecommendedDays} step="1" value={durationDays} onChange={(event) => setDurationDays(event.target.value)} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" />
+              </label>
+              {Number(durationDays) < recommendation.minimumRecommendedDays && <p className="text-sm text-error">Duration must be at least {recommendation.minimumRecommendedDays} days.</p>}
+              <div className="flex gap-2">
+                <button onClick={handleCreateGoal} disabled={isSubmitting || Number(durationDays) < recommendation.minimumRecommendedDays} className="flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-on-primary transition-all hover:opacity-90 disabled:opacity-50">
+                  {isSubmitting ? "Creating plan..." : "Create goal and generate plan"}
+                </button>
+                <button onClick={() => { setRecommendation(null); setDurationDays(""); setErrorMessage(null); }} disabled={isSubmitting} className="rounded-lg bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-high">
+                  Edit details
+                </button>
+              </div>
+            </div>
+          )}
+
+          {errorMessage && <p className="text-sm text-error">{errorMessage}</p>}
+          <button onClick={() => { resetForm(); setIsExpanded(false); }} disabled={isSubmitting} className="w-full rounded-lg bg-surface-container py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-high">
+            {t("cancel")}
+          </button>
+        </div>
+      )}
+    </section>
+  );
 }
-export {
-  AiGoalCreator
-};
+
+export { AiGoalCreator };

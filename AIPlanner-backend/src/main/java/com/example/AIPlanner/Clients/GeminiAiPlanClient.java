@@ -3,6 +3,8 @@ package com.example.AIPlanner.Clients;
 import com.example.AIPlanner.Abstracts.Clients.AiPlanClient;
 import com.example.AIPlanner.Configs.AiProperties;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanResponse;
+import com.example.AIPlanner.DTOs.Requests.Goals.GoalRecommendationRequest;
+import com.example.AIPlanner.DTOs.Responses.Goals.GoalRecommendationResponse;
 import com.example.AIPlanner.Entities.Goal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,20 +35,59 @@ public class GeminiAiPlanClient implements AiPlanClient {
     }
 
     @Override
+    public GoalRecommendationResponse getGoalRecommendation(GoalRecommendationRequest request) {
+        String prompt = """
+                You are an AI goal planning assistant.
+
+                Calculate only the minimum realistic recommendation for this goal.
+
+                Goal title: %s
+                Description: %s
+                Daily available minutes: %d
+                Start date: %s
+
+                Strict rules:
+                - Return ONLY valid JSON.
+                - minimumRecommendedDays must be an integer of at least 1.
+                - minimumRecommendedMinutes must be an integer greater than 0 and represent total minutes.
+                - Do not create a goal or generate a daily plan.
+
+                Required JSON shape:
+                {
+                  "goalTitle": "string",
+                  "minimumRecommendedDays": 10,
+                  "minimumRecommendedMinutes": 600,
+                  "reason": "string"
+                }
+                """.formatted(
+                request.getTitle().trim(),
+                request.getDescription() == null ? "" : request.getDescription().trim(),
+                request.getDailyAvailableMinutes(),
+                request.getStartDate() == null ? "not provided" : request.getStartDate()
+        );
+
+        String json = generateJson(prompt);
+        try {
+            return objectMapper.readValue(json, GoalRecommendationResponse.class);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Failed to parse Gemini recommendation JSON: " + ex.getMessage());
+        }
+    }
+
+    @Override
     public AiGeneratedPlanResponse generatePlan(Goal goal) {
-        validateConfig();
-
         String prompt = buildPrompt(goal);
+        String json = generateJson(prompt);
+        return parseAiPlan(json);
+    }
 
+    private String generateJson(String prompt) {
+        validateConfig();
         Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                        Map.of(
-                                "role", "user",
-                                "parts", List.of(
-                                        Map.of("text", prompt)
-                                )
-                        )
-                ),
+                "contents", List.of(Map.of(
+                        "role", "user",
+                        "parts", List.of(Map.of("text", prompt))
+                )),
                 "generationConfig", Map.of(
                         "temperature", 0.3,
                         "responseMimeType", "application/json"
@@ -59,10 +100,7 @@ public class GeminiAiPlanClient implements AiPlanClient {
                 .body(requestBody)
                 .retrieve()
                 .body(GeminiGenerateContentResponse.class);
-
-        String json = extractText(response);
-
-        return parseAiPlan(json);
+        return extractText(response);
     }
 
     private void validateConfig() {

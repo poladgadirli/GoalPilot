@@ -4,6 +4,8 @@ import com.example.AIPlanner.Abstracts.Clients.AiPlanClient;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanDayResponse;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanResponse;
 import com.example.AIPlanner.DTOs.Responses.AI.AiGeneratedPlanTaskResponse;
+import com.example.AIPlanner.DTOs.Requests.Goals.GoalRecommendationRequest;
+import com.example.AIPlanner.DTOs.Responses.Goals.GoalRecommendationResponse;
 import com.example.AIPlanner.Entities.Goal;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,6 +17,18 @@ import java.util.List;
 @Component
 @ConditionalOnProperty(name = "ai.provider", havingValue = "fake", matchIfMissing = true)
 public class FakeAiPlanClient implements AiPlanClient {
+
+    @Override
+    public GoalRecommendationResponse getGoalRecommendation(GoalRecommendationRequest request) {
+        int minimumDays = 7;
+        int minimumMinutes = minimumDays * request.getDailyAvailableMinutes();
+        return new GoalRecommendationResponse(
+                request.getTitle().trim(),
+                minimumDays,
+                minimumMinutes,
+                "This gives enough time to learn, practice, and apply the goal consistently."
+        );
+    }
 
     @Override
     public AiGeneratedPlanResponse generatePlan(Goal goal) {

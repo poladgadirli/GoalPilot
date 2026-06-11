@@ -266,10 +266,10 @@ async function deleteCategory(id) {
     method: "DELETE"
   });
 }
-async function createGoalRecommendation(title, description) {
-  return requestJson("/api/goal-recommendations", {
+async function getGoalRecommendation(input) {
+  return requestJson("/api/goals/recommendation", {
     method: "POST",
-    body: JSON.stringify({ title, description: description ?? "" })
+    body: JSON.stringify(input)
   });
 }
 async function createGoal(input) {
@@ -307,7 +307,7 @@ async function setPlanTaskCompletion(id, completed) {
     body: JSON.stringify({ completed })
   });
 }
-async function generateAiPlan(goalId) {
+async function generatePlanForGoal(goalId) {
   return requestJson(`/api/goals/${goalId}/plans/generate-ai`, {
     method: "POST"
   });
@@ -316,7 +316,7 @@ export {
   ApiError,
   clearAuth,
   createGoal,
-  createGoalRecommendation,
+  getGoalRecommendation,
   createCategory,
   createTask,
   completePlanTask,
@@ -331,7 +331,7 @@ export {
   fetchTasks,
   fetchTasksWithParams,
   forgotPassword,
-  generateAiPlan,
+  generatePlanForGoal,
   getCurrentUser,
   getStoredUser,
   isAuthenticated,

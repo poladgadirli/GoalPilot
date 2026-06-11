@@ -124,7 +124,21 @@ public class AiPlanGenerationServiceImpl implements AiPlanGenerationService {
             throw new IllegalArgumentException("AI plan day count must match goal duration days");
         }
 
-        for (AiGeneratedPlanDayResponse day : aiPlan.getDays()) {
+        for (int index = 0; index < aiPlan.getDays().size(); index++) {
+            AiGeneratedPlanDayResponse day = aiPlan.getDays().get(index);
+            if (day == null) {
+                throw new IllegalArgumentException("AI plan day is required");
+            }
+
+            int expectedDayNumber = index + 1;
+            if (!Integer.valueOf(expectedDayNumber).equals(day.getDayNumber())) {
+                throw new IllegalArgumentException("AI plan day numbers must be sequential");
+            }
+
+            if (!goal.getStartDate().plusDays(index).equals(day.getDate())) {
+                throw new IllegalArgumentException("AI plan day dates must match the selected duration");
+            }
+
             if (day.getDayNumber() == null || day.getDayNumber() < 1) {
                 throw new IllegalArgumentException("AI plan day number is invalid");
             }
