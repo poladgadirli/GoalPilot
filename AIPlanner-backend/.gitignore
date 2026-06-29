@@ -1,8 +1,22 @@
+```gitignore
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+### Application Config / Secrets ###
+src/main/resources/application.properties
+src/main/resources/application.yml
+src/main/resources/application-local.properties
+src/main/resources/application-local.yml
+.env
+.env.local
+.env.*.local
+
+### Logs ###
+logs/
+*.log
 
 ### STS ###
 .apt_generated
@@ -14,10 +28,11 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,3 +46,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Frontend / Node ###
+node_modules/
+dist/
+.env
+```
